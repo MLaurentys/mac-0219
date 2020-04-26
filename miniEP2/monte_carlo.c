@@ -184,9 +184,8 @@ int main(int argc, char **argv){
     long double estimate = 0.0;
 
     if(n_threads == 1){
-        if(DEBUG){
+        if(DEBUG)
             printf("Running sequential version\n");
-        }
 
         timer.c_start = clock();
         clock_gettime(CLOCK_MONOTONIC, &timer.t_start);
@@ -202,9 +201,8 @@ int main(int argc, char **argv){
         clock_gettime(CLOCK_MONOTONIC, &timer.t_end);
         gettimeofday(&timer.v_end, NULL);
     } else {
-        if(DEBUG){
+        if(DEBUG)
             printf("Running parallel version\n");
-        }
 
         timer.c_start = clock();
         clock_gettime(CLOCK_MONOTONIC, &timer.t_start);
