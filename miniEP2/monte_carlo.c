@@ -129,7 +129,8 @@ int create_threads (int n_threads, int size, long double *samples,
     int jobs_per_thread = size / n_threads;
     int dif = size - jobs_per_thread * n_threads;
     for (int i=0; i < n_threads; i++) {
-        printf("Creating thread %d...\n", i);
+        if (VERBOSE)
+            printf("Creating thread %d...\n", i);
         int toAdd = 0;
         if (dif) {
             toAdd = 1;
@@ -214,7 +215,6 @@ int main(int argc, char **argv){
         void *status;   
         pthread_t threads[n_threads];     
         thread_data_array = malloc(n_threads * sizeof(struct thread_data));
-        //long double *accumulator_array = malloc(n_threads * sizeof(double));
         long double *uniform_samples = uniform_sample(target_function.interval,
                                                       samples,
                                                       size);
@@ -234,7 +234,8 @@ int main(int argc, char **argv){
                 printf("IH, SUJOU: codigo de retorno de pthread_join foi %d.\n", error_code);
                 exit(-1);
             }
-            printf("Thread %d deu join com status %ld\n", i, (long)status);
+            if (VERBOSE)
+                printf("Thread %d deu join com status %ld\n", i, (long)status);
 
             estimate += results[i];
         }
