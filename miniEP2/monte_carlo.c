@@ -99,10 +99,10 @@ long double monte_carlo_integrate(long double (*f)(long double), long double *sa
     long double accumulator = 0.0;
     
     for (int i=0; i < size; i++) {
-        accumulator += (*f)(samples[i]);
+        accumulator += (*f)(samples[i])/size;
     }
 
-    return accumulator/size;
+    return accumulator;
 }
 
 void *monte_carlo_integrate_thread (void *args){
@@ -235,11 +235,9 @@ int main(int argc, char **argv){
             if (VERBOSE)
                 printf("Thread %d deu join com status %ld\n", i, (long)status);
 
-            estimate += results[i];
+            estimate += results[i]/size;
         }
         // Your pthreads code ends here
-        
-        estimate = estimate / size;
 
         timer.c_end = clock();
         clock_gettime(CLOCK_MONOTONIC, &timer.t_end);
