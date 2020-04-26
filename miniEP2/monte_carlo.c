@@ -37,7 +37,7 @@ struct function {
 long double rand_interval[] = {0.0, (long double) RAND_MAX};
 
 long double f1(long double x){
-    return 2 / (sqrt(1 - (x * x)));
+    return 2.0 / (sqrt(1.0 - (x * x)));
 }
 
 struct function functions[] = {
@@ -52,6 +52,7 @@ struct thread_data {
     int sz;                        // size of the samples array
     unsigned int thread_id;
     int first_job_index;
+    int total_size;
 };
 
 struct thread_data *thread_data_array;
@@ -97,9 +98,17 @@ long double monte_carlo_integrate(long double (*f)(long double), long double *sa
     // Your sequential code goes here
     
     long double accumulator = 0.0;
-    
+    int aux = 0;
     for (int i=0; i < size; i++) {
         accumulator += (*f)(samples[i])/size;
+        if (accumulator == INFINITY) {
+            printf("DEU RUIM: INFINITO NA ITERACAO %d\n", i);
+        }
+        // if (aux > 100){
+        //     printf("%Lf\n", accumulator);
+        //     aux = 0;
+        // }
+        // ++aux;
     }
 
     return accumulator;
@@ -110,15 +119,23 @@ void *monte_carlo_integrate_thread (void *args){
     struct thread_data *my_data;
     long double (*f)(long double);
     int id, ini;
-
     my_data = (struct thread_data *) args;
     f = my_data->f;
     id = my_data->thread_id;
     ini = my_data->first_job_index;
+    long double sz = (long double)my_data->total_size;
+    //printf("%Lf\n", sz);
     
+    int aux = 0;
     results[id] = 0;
-    for (int i = 0; i < my_data->sz; i++)
-        results[id] += f (my_data->samples[ini + i]);
+    for (int i = 0; i < my_data->sz; i++) {
+        results[id] += f (my_data->samples[ini + i]) / sz;
+        if (aux > 100){
+            //printf("%Lf\n", results[id]);
+            aux = 0;
+        }
+        ++aux;
+    }
 
     pthread_exit(NULL);
 }
@@ -141,6 +158,7 @@ int create_threads (int n_threads, int size, long double *samples,
         thread_data_array[i].samples         = samples;
         thread_data_array[i].sz              = jobs_per_thread + toAdd;
         thread_data_array[i].first_job_index = i * jobs_per_thread;
+        thread_data_array[i].total_size = size;
         
         error_code = pthread_create(&threads[i], NULL, monte_carlo_integrate_thread,
                                        (void *)&thread_data_array[i]);
@@ -235,7 +253,7 @@ int main(int argc, char **argv){
             if (VERBOSE)
                 printf("Thread %d deu join com status %ld\n", i, (long)status);
 
-            estimate += results[i]/size;
+            estimate += results[i];
         }
         // Your pthreads code ends here
 
@@ -253,7 +271,7 @@ int main(int argc, char **argv){
             //print_array(samples, size);
             printf("Estimate: [%.33LF]\n", estimate);
         }
-        printf("%.16LF, [%f, clock], [%f, clock_gettime], [%f, gettimeofday]\n",
+        printf("%Lf, [%f, clock], [%f, clock_gettime], [%f, gettimeofday]\n",
                estimate,
                (double) (timer.c_end - timer.c_start) / (double) CLOCKS_PER_SEC,
                (double) (timer.t_end.tv_sec - timer.t_start.tv_sec) +
@@ -261,7 +279,7 @@ int main(int argc, char **argv){
                (double) (timer.v_end.tv_sec - timer.v_start.tv_sec) +
                (double) (timer.v_end.tv_usec - timer.v_start.tv_usec) / 1000000.0);
     } else {
-        printf("%.16LF, %f\n",
+        printf("%Lf, %f\n",
                estimate,
                (double) (timer.t_end.tv_sec - timer.t_start.tv_sec) +
                (double) (timer.t_end.tv_nsec - timer.t_start.tv_nsec) / 1000000000.0);
