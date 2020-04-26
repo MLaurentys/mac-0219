@@ -41,15 +41,21 @@ long double f1(long double x){
 }
 
 struct function functions[] = {
-                               {&f1, {0.0, 1.0}}
+    {&f1, {0.0, 1.0}}
 };
 
 // Your thread data structures go here
 
-struct thread_data{
+struct thread_data {
+    long double (*f)(long double); // pointer to function to be evaluated
+    long double *samples;          // pointer to array with x values
+    int sz;                        // size of the samples array
+    unsigned int thread_id;
+    int first_job_index;
 };
 
 struct thread_data *thread_data_array;
+
 
 // End of data structures
 
@@ -90,19 +96,58 @@ void print_array(long double *sample, int size){
 long double monte_carlo_integrate(long double (*f)(long double), long double *samples, int size){
     // Your sequential code goes here
     
-    long double accumulator = 0;
+    long double accumulator = 0.0;
     
-    int i;
-    for (i=0; i< size; i++) {
+    for (int i=0; i < size; i++) {
         accumulator += (*f)(samples[i]);
     }
 
     return accumulator/size;
 }
 
-void *monte_carlo_integrate_thread(void *args){
+void *monte_carlo_integrate_thread (void *args){
     // Your pthreads code goes here
+    struct thread_data *my_data;
+    long double (*f)(long double);
+    int id, ini;
+
+    my_data = (struct thread_data *) args;
+    f = my_data->f;
+    id = my_data->thread_id;
+    ini = my_data->first_job_index;
+    
+    results[id] = 0;
+    for (int i = 0; i < my_data->sz; i++)
+        results[id] += f (my_data->samples[ini + i]);
+
     pthread_exit(NULL);
+}
+
+int create_threads (int n_threads, int size, long double *samples,
+        long double (*f)(long double), pthread_t *threads) {
+    int error_code = 0;
+    int jobs_per_thread = size / n_threads;
+    int dif = size - jobs_per_thread * n_threads;
+    for (int i=0; i < n_threads; i++) {
+        printf("Creating thread %d...\n", i);
+        int toAdd = 0;
+        if (dif) {
+            toAdd = 1;
+            --dif;
+        }
+        thread_data_array[i].thread_id       = i;
+        thread_data_array[i].f               = f;
+        thread_data_array[i].samples         = samples;
+        thread_data_array[i].sz              = jobs_per_thread + toAdd;
+        thread_data_array[i].first_job_index = i * jobs_per_thread;
+        
+        error_code = pthread_create(&threads[i], NULL, monte_carlo_integrate_thread,
+                                       (void *)&thread_data_array[i]);
+
+        if (error_code)
+            break;
+    }
+    return error_code;
 }
 
 int main(int argc, char **argv){
@@ -134,8 +179,8 @@ int main(int argc, char **argv){
     int n_threads = atoi(argv[3]);
 
     samples = malloc(size * sizeof(long double));
-
-    long double estimate;
+    results = malloc(n_threads * sizeof(long double));
+    long double estimate = 0.0;
 
     if(n_threads == 1){
         if(DEBUG){
@@ -165,11 +210,37 @@ int main(int argc, char **argv){
         gettimeofday(&timer.v_start, NULL);
 
         // Your pthreads code goes here
+        int error_code;  
+        void *status;   
+        pthread_t threads[n_threads];     
+        thread_data_array = malloc(n_threads * sizeof(struct thread_data));
+        //long double *accumulator_array = malloc(n_threads * sizeof(double));
+        long double *uniform_samples = uniform_sample(target_function.interval,
+                                                      samples,
+                                                      size);
 
-        printf("Not implemented yet\n");
-        exit(-1);
+        error_code = create_threads(n_threads, size,
+            uniform_samples, target_function.f, threads);
+        if (error_code) {
+                printf("IH, SUJOU: codigo de retorno de create_threads foi %d.\n", error_code);
+                exit(-1);
+        }
 
+        estimate = 0;
+        for (int i= 0; i < n_threads; i++) {
+            error_code = pthread_join(threads[i], &status);
+
+            if (error_code) {
+                printf("IH, SUJOU: codigo de retorno de pthread_join foi %d.\n", error_code);
+                exit(-1);
+            }
+            printf("Thread %d deu join com status %ld\n", i, (long)status);
+
+            estimate += results[i];
+        }
         // Your pthreads code ends here
+        
+        estimate = estimate / size;
 
         timer.c_end = clock();
         clock_gettime(CLOCK_MONOTONIC, &timer.t_end);
@@ -182,7 +253,7 @@ int main(int argc, char **argv){
 
     if(DEBUG){
         if(VERBOSE){
-            print_array(samples, size);
+            //print_array(samples, size);
             printf("Estimate: [%.33LF]\n", estimate);
         }
         printf("%.16LF, [%f, clock], [%f, clock_gettime], [%f, gettimeofday]\n",
