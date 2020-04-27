@@ -37,7 +37,13 @@ struct function {
 long double rand_interval[] = {0.0, (long double) RAND_MAX};
 
 long double f1(long double x){
-    return 2.0 / (sqrt(1.0 - (x * x)));
+    if (x == 1.0)
+        x = 0.999999;
+    long double ret = 2.0 / (sqrt(1.0 - (x * x)));
+    if (ret == INFINITY){
+        printf("INIFINITY WiTH x= %Lf", x);
+    }
+    return ret;
 }
 
 struct function functions[] = {
