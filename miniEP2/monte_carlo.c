@@ -64,7 +64,7 @@ struct thread_data {
 struct t_data {
     long double (*f)(long double); // pointer to function to be evaluated
     long double *samples;          // pointer to array with x values
-    int *completed;
+    int *index;
     int sz;                        // size of the samples array
     unsigned int thread_id;
     int first_job_index;
@@ -126,29 +126,20 @@ void *mcit(void *args) {
     // Your pthreads code goes here
     struct t_data *my_data;
     long double (*f)(long double);
-    int id, ini;
-    int *st;
+    int id;
     my_data = (struct t_data *) args;
+    int* ind = my_data->index;
     f = my_data->f;
     id = my_data->thread_id;
-    ini = my_data->first_job_index;
     int sz = my_data->total_size;
-    st = my_data->completed;
-    printf("Rodou st = %d\n", st == NULL);
 
     results[id] = 0.0;
-    for (int i = 0; i < sz; i++) {
-        int index = (ini + i)%sz;
+    for (int index = 0; index < sz;) {
         pthread_mutex_lock(&mutex);
-        if (st[index]) {
-            pthread_mutex_unlock(&mutex);
-            continue;
-        }
-        else
-            st[index] = 1;
+        index = *ind;
+        ++(*ind);  
         pthread_mutex_unlock(&mutex);
         results[id] += f (my_data->samples[index]) / sz;
-
     }
 
     pthread_exit(NULL);
@@ -179,11 +170,12 @@ void *monte_carlo_integrate_thread (void *args){
     pthread_exit(NULL);
 }
 int c_threads (int n_threads, int size, long double *samples,
-        long double (*f)(long double), pthread_t *threads, int **status) {
-    for (int i =0; i < size; ++i) (*status)[i] = 0;
+        long double (*f)(long double), pthread_t *threads) {
     int error_code = 0;
     int jobs_per_thread = size / n_threads;
     int dif = size - jobs_per_thread * n_threads;
+    int *shared_index;
+    *shared_index = 0;
     for (int i=0; i < n_threads; i++) {
         if (VERBOSE)
             printf("Creating thread %d...\n", i);
@@ -198,7 +190,7 @@ int c_threads (int n_threads, int size, long double *samples,
         thread_data_array[i].sz              = jobs_per_thread + toAdd;
         thread_data_array[i].first_job_index = i * jobs_per_thread;
         thread_data_array[i].total_size = size;
-        thread_data_array[i].completed = *status;
+        thread_data_array[i].index = shared_index;
         
         error_code = pthread_create(&threads[i], NULL, mcit,
                                        (void *)&thread_data_array[i]);
@@ -296,7 +288,6 @@ int main(int argc, char **argv){
         // Your pthreads code goes here
         int error_code;  
         void *status;
-        int *status_b = malloc(sizeof(int) * size);
         pthread_t threads[n_threads];     
         thread_data_array = malloc(n_threads * sizeof(struct t_data));
         long double *uniform_samples = uniform_sample(target_function.interval,
@@ -304,7 +295,7 @@ int main(int argc, char **argv){
                                                       size);
 
         error_code = c_threads(n_threads, size,
-            uniform_samples, target_function.f, threads, &status_b);
+            uniform_samples, target_function.f, threads);
         if (error_code) {
                 printf("IH, SUJOU: codigo de retorno de create_threads foi %d.\n", error_code);
                 exit(-1);
@@ -324,7 +315,6 @@ int main(int argc, char **argv){
             estimate += results[i];
         }
         // Your pthreads code ends here
-        free(status_b);
         timer.c_end = clock();
         clock_gettime(CLOCK_MONOTONIC, &timer.t_end);
         gettimeofday(&timer.v_end, NULL);
