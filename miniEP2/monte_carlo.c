@@ -40,9 +40,6 @@ long double f1(long double x){
     if (x == 1.0)
         x = 0.999999;
     long double ret = 2.0 / (sqrt(1.0 - (x * x)));
-    if (ret == INFINITY){
-        printf("INIFINITY WiTH x= %Lf", x);
-    }
     return ret;
 }
 
@@ -72,8 +69,8 @@ struct t_data {
 };
 
 
-struct t_data *thread_data_array;
-
+struct thread_data *thread_data_array;
+struct t_data *t_data_array;
 
 // End of data structures
 
@@ -154,18 +151,9 @@ void *monte_carlo_integrate_thread (void *args){
     id = my_data->thread_id;
     ini = my_data->first_job_index;
     long double sz = (long double)my_data->total_size;
-    //printf("%Lf\n", sz);
-    
-    int aux = 0;
     results[id] = 0;
-    for (int i = 0; i < my_data->sz; i++) {
+    for (int i = 0; i < my_data->sz; i++)
         results[id] += f (my_data->samples[ini + i]) / sz;
-        if (aux > 100){
-            //printf("%Lf\n", results[id]);
-            aux = 0;
-        }
-        ++aux;
-    }
 
     pthread_exit(NULL);
 }
@@ -184,13 +172,13 @@ int c_threads (int n_threads, int size, long double *samples,
             toAdd = 1;
             --dif;
         }
-        thread_data_array[i].thread_id       = i;
-        thread_data_array[i].f               = f;
-        thread_data_array[i].samples         = samples;
-        thread_data_array[i].sz              = jobs_per_thread + toAdd;
-        thread_data_array[i].first_job_index = i * jobs_per_thread;
-        thread_data_array[i].total_size = size;
-        thread_data_array[i].index = shared_index;
+        t_data_array[i].thread_id       = i;
+        t_data_array[i].f               = f;
+        t_data_array[i].samples         = samples;
+        t_data_array[i].sz              = jobs_per_thread + toAdd;
+        t_data_array[i].first_job_index = i * jobs_per_thread;
+        t_data_array[i].total_size = size;
+        t_data_array[i].index = shared_index;
         
         error_code = pthread_create(&threads[i], NULL, mcit,
                                        (void *)&thread_data_array[i]);
@@ -219,6 +207,7 @@ int create_threads (int n_threads, int size, long double *samples,
         thread_data_array[i].sz              = jobs_per_thread + toAdd;
         thread_data_array[i].first_job_index = i * jobs_per_thread;
         thread_data_array[i].total_size = size;
+        
         error_code = pthread_create(&threads[i], NULL, monte_carlo_integrate_thread,
                                        (void *)&thread_data_array[i]);
 
@@ -227,7 +216,6 @@ int create_threads (int n_threads, int size, long double *samples,
     }
     return error_code;
 }
-
 int main(int argc, char **argv){
     if(argc != 4){
         printf("%s", usage_message);
@@ -289,12 +277,12 @@ int main(int argc, char **argv){
         int error_code;  
         void *status;
         pthread_t threads[n_threads];     
-        thread_data_array = malloc(n_threads * sizeof(struct t_data));
+        thread_data_array = malloc(n_threads * sizeof(struct thread_data));
         long double *uniform_samples = uniform_sample(target_function.interval,
                                                       samples,
                                                       size);
 
-        error_code = c_threads(n_threads, size,
+        error_code = create_threads(n_threads, size,
             uniform_samples, target_function.f, threads);
         if (error_code) {
                 printf("IH, SUJOU: codigo de retorno de create_threads foi %d.\n", error_code);
