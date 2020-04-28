@@ -104,12 +104,8 @@ long double monte_carlo_integrate(long double (*f)(long double), long double *sa
     // Your sequential code goes here
     
     long double accumulator = 0.0;
-    for (int i=0; i < size; i++) {
+    for (int i=0; i < size; i++)
         accumulator += (*f)(samples[i])/size;
-        // if (accumulator == INFINITY) {
-        //     printf("DEU RUIM: INFINITO NA ITERACAO %d\n", i);
-        // }
-    }
 
     return accumulator;
 }
