@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <pthread.h>
 
 double c_x_min;
 double c_x_max;
@@ -40,6 +41,17 @@ int colors[17][3] = {
                         {16, 16, 16},
                     };
 
+
+struct thread_data {
+    unsigned int thread_id;
+    int i_y;                       // initial y-index the thread will calculate
+    int i_y_max;                   // last y-index the thread will calculate
+};
+
+int n_threads;
+pthread_t *threads;
+struct thread_data *t_data;
+
 void allocate_image_buffer(){
     int rgb_size = 3;
     image_buffer = (unsigned char **) malloc(sizeof(unsigned char *) * image_buffer_size);
@@ -50,13 +62,13 @@ void allocate_image_buffer(){
 };
 
 void init(int argc, char *argv[]){
-    if(argc < 6){
-        printf("usage: ./mandelbrot_pth c_x_min c_x_max c_y_min c_y_max image_size\n");
+    if(argc < 7){
+        printf("usage: ./mandelbrot_pth c_x_min c_x_max c_y_min c_y_max image_size n_threads \n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_pth -2.5 1.5 -2.0 2.0 11500\n");
-        printf("    Seahorse Valley:      ./mandelbrot_pth -0.8 -0.7 0.05 0.15 11500\n");
-        printf("    Elephant Valley:      ./mandelbrot_pth 0.175 0.375 -0.1 0.1 11500\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_pth -0.188 -0.012 0.554 0.754 11500\n");
+        printf("    Full Picture:         ./mandelbrot_pth -2.5 1.5 -2.0 2.0 11500 4\n");
+        printf("    Seahorse Valley:      ./mandelbrot_pth -0.8 -0.7 0.05 0.15 11500 8\n");
+        printf("    Elephant Valley:      ./mandelbrot_pth 0.175 0.375 -0.1 0.1 11500 2\n");
+        printf("    Triple Spiral Valley: ./mandelbrot_pth -0.188 -0.012 0.554 0.754 11500 16\n");
         exit(0);
     }
     else{
@@ -65,11 +77,11 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &c_y_min);
         sscanf(argv[4], "%lf", &c_y_max);
         sscanf(argv[5], "%d", &image_size);
+        sscanf(argv[6], "%d", &n_threads);
 
         i_x_max           = image_size;
         i_y_max           = image_size;
         image_buffer_size = image_size * image_size;
-
         pixel_width       = (c_x_max - c_x_min) / i_x_max;
         pixel_height      = (c_y_max - c_y_min) / i_y_max;
     };
@@ -111,7 +123,8 @@ void write_to_file(){
     fclose(file);
 };
 
-void compute_mandelbrot(){
+void *compute_mandelbrot_pth (void *t_data_arg) {
+    struct thread_data *my_data = (struct thread_data *)(t_data_arg);
     double z_x;
     double z_y;
     double z_x_squared;
@@ -125,7 +138,7 @@ void compute_mandelbrot(){
     double c_x;
     double c_y;
 
-    for(i_y = 0; i_y < i_y_max; i_y++){
+    for(i_y = my_data->i_y; i_y < my_data->i_y_max; i_y++){
         c_y = c_y_min + i_y * pixel_height;
 
         if(fabs(c_y) < pixel_height / 2){
@@ -156,6 +169,46 @@ void compute_mandelbrot(){
         };
     };
 };
+
+int create_threads (pthread_t *threads, struct thread_data *t_data) {
+    int error = 0;
+    int last = 0;
+    int rows_per_thread = image_size / n_threads;
+    int rems = image_size - rows_per_thread * n_threads;
+
+    for (int i = 0; i < n_threads; ++i) {
+        t_data[i].thread_id = i;
+        t_data[i].i_y = last;
+        last += rows_per_thread;
+        if (rems-- > 0) last++;
+        t_data[i].i_y_max = last;
+        error = pthread_create(&threads[i], NULL,
+                               compute_mandelbrot_pth, (void *) &t_data[i]);
+        if (error) break;
+    }
+    return error;
+}
+
+void compute_mandelbrot() {
+    // create threads
+    threads = malloc (sizeof(pthread_t)*n_threads);
+    t_data = malloc (sizeof(struct thread_data)*n_threads);
+    int thread_error_code = create_threads(threads, t_data);
+    if (thread_error_code) {
+        printf ("Erro na criacao das threads");
+        exit(-1);
+    }
+    // join threads (calculate)
+    void *status;
+    int error;
+    for (int i = 0; i < n_threads; ++i) {
+        error = pthread_join (threads[i], &status);
+        if (thread_error_code) {
+            printf ("Erro na execucao das threads");
+            exit(-1);
+        }
+    }
+}
 
 int main(int argc, char *argv[]){
     init(argc, argv);
