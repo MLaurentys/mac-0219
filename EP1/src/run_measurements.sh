@@ -3,12 +3,12 @@
 set -o xtrace
 
 MEASUREMENTS=10
-ITERATIONS=8
+ITERATIONS=10
 INITIAL_SIZE=16
-TH_NUM=16
+TH_NUM=64
 SIZE=$INITIAL_SIZE
 
-NAMES_TH=('mandelbrot_pth')
+NAMES_TH=('mandelbrot_pth', 'mandelbrot_omp')
 NAMES = ('mandelbrot_seq')
 make
 
