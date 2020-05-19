@@ -130,16 +130,9 @@ void compute_mandelbrot(){
     double c_y;
 
     int tid;
-
-    #pragma omp parallel private(tid)
-    {
-        tid = omp_get_thread_num();
-        printf("sou a thread %d\n", tid);
-        #pragma omp nun_threads(n_threads) parallel for \
-            shared(i_x_max)                         \
-            private(i_y, i_y_max, i_x, z_x, z_y,    \
-                    z_x_squared, z_y_squared)       \
-            schedule(static, chunk)
+    omp_set_num_threads(n_threads);
+    #pragma omp parallel for \
+        private(z_x, z_y, z_x_squared, z_y_squared)    
         for(i_y = 0; i_y < i_y_max; i_y++){
             c_y = c_y_min + i_y * pixel_height;
 
