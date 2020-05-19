@@ -132,7 +132,7 @@ void compute_mandelbrot(){
     int tid;
     omp_set_num_threads(n_threads);
     #pragma omp parallel for \
-        private(z_x, z_y, z_x_squared, z_y_squared)    
+        private(i_x, z_x, z_y, z_x_squared, z_y_squared, c_y, c_x, iteration)    
         for(i_y = 0; i_y < i_y_max; i_y++){
             c_y = c_y_min + i_y * pixel_height;
 
@@ -163,7 +163,6 @@ void compute_mandelbrot(){
                 update_rgb_buffer(iteration, i_x, i_y);
             };
         };
-    };
 };
 
 int main(int argc, char *argv[]){
