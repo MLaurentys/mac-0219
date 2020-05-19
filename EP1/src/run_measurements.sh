@@ -8,8 +8,8 @@ INITIAL_SIZE=64
 TH_NUM=('32' '64')
 SIZE=$INITIAL_SIZE
 
-NAMES_TH=('mandelbrot_pth' 'mandelbrot_omp')
-NAMES=('mandelbrot_seq')
+NAMES_TH=('mandelbrot_omp')
+NAMES__=('mandelbrot_seq')
 make
 
 for NAME in ${NAMES[@]}; do

@@ -1,0 +1,27 @@
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+./mandelbrot_omp: Interrupt
+
+ Performance counter stats for './mandelbrot_omp -0.8 -0.7 0.05 0.15 16384 64' (13 runs):
+
+        318.618097      task-clock (msec)         #    0.997 CPUs utilized            ( +- 28.93% )
+                 7      context-switches          #    0.023 K/sec                    ( +- 34.99% )
+                 0      cpu-migrations            #    0.000 K/sec                    ( +-100.00% )
+           102,246      page-faults               #    0.321 M/sec                    ( +- 29.61% )
+     1,153,191,749      cycles                    #    3.619 GHz                      ( +- 29.28% )
+     2,732,967,032      instructions              #    2.37  insn per cycle           ( +- 29.65% )
+       470,119,308      branches                  # 1475.495 M/sec                    ( +- 29.64% )
+           304,777      branch-misses             #    0.06% of all branches          ( +- 32.00% )
+
+       0.319458550 seconds time elapsed                                          ( +- 28.85% )
+

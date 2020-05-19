@@ -1,0 +1,23 @@
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+./mandelbrot_pth: Interrupt
+
+ Performance counter stats for './mandelbrot_pth -2.5 1.5 -2.0 2.0 16384 64' (13 runs):
+
+      24362.356810      task-clock (msec)         #    2.791 CPUs utilized            ( +- 41.15% )
+             4,610      context-switches          #    0.189 K/sec                    ( +- 42.94% )
+               108      cpu-migrations            #    0.004 K/sec                    ( +- 42.05% )
+         1,038,910      page-faults               #    0.043 M/sec                    ( +- 34.77% )
+    81,839,912,664      cycles                    #    3.359 GHz                      ( +- 41.04% )
+   101,003,357,021      instructions              #    1.23  insn per cycle           ( +- 39.46% )
+    12,154,110,016      branches                  #  498.889 M/sec                    ( +- 38.35% )
+        20,729,763      branch-misses             #    0.17% of all branches          ( +- 41.99% )
+
+       8.728303657 seconds time elapsed                                          ( +- 38.65% )
+
