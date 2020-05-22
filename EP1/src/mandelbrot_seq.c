@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
 
 double c_x_min;
 double c_x_max;
@@ -158,13 +159,19 @@ void compute_mandelbrot(){
 };
 
 int main(int argc, char *argv[]){
+    clock_t al_s = clock();
     init(argc, argv);
-
     allocate_image_buffer();
+    clock_t al_e = clock();
 
     compute_mandelbrot();
 
+    clock_t io_s = clock();
     write_to_file();
+    clock_t io_e = clock();
 
+    double al_t = (double)(al_e - al_s)/CLOCKS_PER_SEC;
+    double io_t = (double)(io_e - io_s)/CLOCKS_PER_SEC;
+    printf("%f\n%f\n===\n", al_t, io_t);
     return 0;
 };
