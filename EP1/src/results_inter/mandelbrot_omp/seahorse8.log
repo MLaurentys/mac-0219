@@ -1,0 +1,56 @@
+[kernel.kallsyms] with build id 7f8bd6eeb0ef492b560db70cd3d02872bf77ee1a not found, continuing without symbols
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cycles:uppp'
+# Event count (approx.): 59862006
+#
+# Overhead  Command         Shared Object       Symbol                            
+# ........  ..............  ..................  ..................................
+#
+    82.63%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c0
+     8.79%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c2
+     2.25%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6cb
+     1.98%  mandelbrot_omp  mandelbrot_omp      [.] compute_mandelbrot._omp_fn.0
+     1.55%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c6
+     1.26%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6cf
+     0.30%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c858
+     0.20%  mandelbrot_omp  [kernel]            [k] 0xffffffff8c0009e7
+     0.12%  mandelbrot_omp  ld-2.27.so          [.] strcmp
+     0.12%  mandelbrot_omp  libc-2.27.so        [.] _dl_addr
+     0.11%  mandelbrot_omp  ld-2.27.so          [.] do_lookup_x
+     0.08%  mandelbrot_omp  libc-2.27.so        [.] _IO_fwrite
+     0.08%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c868
+     0.05%  mandelbrot_omp  ld-2.27.so          [.] _dl_relocate_object
+     0.05%  mandelbrot_omp  ld-2.27.so          [.] dl_main
+     0.05%  mandelbrot_omp  libc-2.27.so        [.] __GI_____strtoull_l_internal
+     0.05%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001a5d0
+     0.05%  mandelbrot_omp  libc-2.27.so        [.] _int_malloc
+     0.04%  mandelbrot_omp  ld-2.27.so          [.] _dl_init
+     0.04%  mandelbrot_omp  libc-2.27.so        [.] intel_check_word.isra.0
+     0.03%  mandelbrot_omp  ld-2.27.so          [.] _dl_load_cache_lookup
+     0.02%  mandelbrot_omp  ld-2.27.so          [.] __GI___tunables_init
+     0.02%  mandelbrot_omp  ld-2.27.so          [.] get_common_indeces.constprop.1
+     0.02%  mandelbrot_omp  ld-2.27.so          [.] _dl_check_map_versions
+     0.02%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019d56
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] __clone
+     0.01%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019d30
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] __ctype_init
+     0.01%  mandelbrot_omp  ld-2.27.so          [.] _dl_sysdep_start
+     0.01%  mandelbrot_omp  libpthread-2.27.so  [.] start_thread
+     0.01%  mandelbrot_omp  ld-2.27.so          [.] _dl_fixup
+     0.01%  mandelbrot_omp  ld-2.27.so          [.] _dl_start
+     0.01%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019d3e
+     0.01%  mandelbrot_omp  libpthread-2.27.so  [.] __ctype_init@plt
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] _setjmp
+     0.01%  mandelbrot_omp  libpthread-2.27.so  [.] _init
+     0.00%  mandelbrot_omp  libpthread-2.27.so  [.] _setjmp@plt
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _start
+     0.00%  mandelbrot_omp  [unknown]           [.] 0000000000000000
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

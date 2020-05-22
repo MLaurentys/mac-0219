@@ -1,0 +1,32 @@
+[kernel.kallsyms] with build id 7f8bd6eeb0ef492b560db70cd3d02872bf77ee1a not found, continuing without symbols
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 58  of event 'cycles:uppp'
+# Event count (approx.): 1537488
+#
+# Overhead  Command         Shared Object     Symbol                    
+# ........  ..............  ................  ..........................
+#
+    72.86%  mandelbrot_seq  mandelbrot_seq    [.] compute_mandelbrot
+     5.17%  mandelbrot_seq  libc-2.27.so      [.] _dl_addr
+     3.30%  mandelbrot_seq  libc-2.27.so      [.] __GI___libc_open
+     2.74%  mandelbrot_seq  ld-2.27.so        [.] _dl_lookup_symbol_x
+     2.54%  mandelbrot_seq  ld-2.27.so        [.] _dl_relocate_object
+     2.07%  mandelbrot_seq  mandelbrot_seq    [.] allocate_image_buffer
+     2.00%  mandelbrot_seq  [kernel]          [k] 0xffffffff8c0009e7
+     1.78%  mandelbrot_seq  ld-2.27.so        [.] do_lookup_x
+     1.72%  mandelbrot_seq  libc-2.27.so      [.] init_cacheinfo
+     1.66%  mandelbrot_seq  ld-2.27.so        [.] __GI___tunables_init
+     1.33%  mandelbrot_seq  ld-2.27.so        [.] _dl_map_object_from_fd
+     1.32%  mandelbrot_seq  ld-2.27.so        [.] strcmp
+     1.10%  mandelbrot_seq  ld-2.27.so        [.] dl_main
+     0.29%  mandelbrot_seq  ld-2.27.so        [.] _dl_start
+     0.12%  mandelbrot_seq  ld-2.27.so        [.] _start
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#
