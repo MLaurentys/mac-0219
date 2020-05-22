@@ -4,55 +4,66 @@
 #
 # Total Lost Samples: 0
 #
-# Samples: 10K of event 'cycles:uppp'
-# Event count (approx.): 498034408
+# Samples: 33K of event 'cycles:uppp'
+# Event count (approx.): 1642705304
 #
 # Overhead  Command         Shared Object       Symbol                          
 # ........  ..............  ..................  ................................
 #
-    50.66%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c0
-    40.04%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c858
-     3.03%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c2
-     1.99%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c85a
-     0.87%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6cb
-     0.83%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c6
-     0.80%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c85e
-     0.67%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c863
-     0.54%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6cf
-     0.36%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c868
-     0.03%  mandelbrot_omp  mandelbrot_omp      [.] compute_mandelbrot._omp_fn.0
-     0.03%  mandelbrot_omp  ld-2.27.so          [.] do_lookup_x
-     0.02%  mandelbrot_omp  libc-2.27.so        [.] _dl_addr
-     0.02%  mandelbrot_omp  ld-2.27.so          [.] strcmp
-     0.02%  mandelbrot_omp  ld-2.27.so          [.] _dl_relocate_object
-     0.02%  mandelbrot_omp  ld-2.27.so          [.] _dl_runtime_resolve_xsavec
-     0.01%  mandelbrot_omp  libc-2.27.so        [.] _int_malloc
-     0.01%  mandelbrot_omp  libc-2.27.so        [.] __memmove_avx_unaligned_erms
-     0.01%  mandelbrot_omp  ld-2.27.so          [.] mmap64
-     0.01%  mandelbrot_omp  ld-2.27.so          [.] __GI___tunables_init
-     0.01%  mandelbrot_omp  ld-2.27.so          [.] __tunable_get_val
-     0.01%  mandelbrot_omp  libpthread-2.27.so  [.] pthread_create@@GLIBC_2.2.5
-     0.00%  mandelbrot_omp  libpthread-2.27.so  [.] elision_init
-     0.00%  mandelbrot_omp  libc-2.27.so        [.] __strlen_avx2
-     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_catch_exception
-     0.00%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019e72
-     0.00%  mandelbrot_omp  [kernel]            [k] 0xffffffff8c0009e7
-     0.00%  mandelbrot_omp  ld-2.27.so          [.] dl_main
+    46.69%  mandelbrot_omp  mandelbrot_omp      [.] compute_mandelbrot._omp_fn.0
+    17.68%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c0
+    15.96%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c858
+     4.75%  mandelbrot_omp  libc-2.27.so        [.] _IO_fwrite
+     3.45%  mandelbrot_omp  mandelbrot_omp      [.] update_rgb_buffer
+     3.33%  mandelbrot_omp  libc-2.27.so        [.] _int_malloc
+     0.98%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c2
+     0.94%  mandelbrot_omp  libc-2.27.so        [.] malloc
+     0.90%  mandelbrot_omp  mandelbrot_omp      [.] allocate_image_buffer
+     0.86%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c85a
+     0.77%  mandelbrot_omp  libc-2.27.so        [.] _IO_file_xsputn@@GLIBC_2.2.5
+     0.51%  mandelbrot_omp  [kernel]            [k] 0xffffffff8c0009e7
+     0.47%  mandelbrot_omp  mandelbrot_omp      [.] write_to_file
+     0.40%  mandelbrot_omp  libc-2.27.so        [.] __memmove_avx_unaligned_erms
+     0.40%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c863
+     0.38%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6cb
+     0.36%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6c6
+     0.30%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c85e
+     0.20%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c868
+     0.20%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6cf
+     0.10%  mandelbrot_omp  libc-2.27.so        [.] @plt
+     0.10%  mandelbrot_omp  libc-2.27.so        [.] __mempcpy_avx_unaligned_erms
+     0.10%  mandelbrot_omp  mandelbrot_omp      [.] fwrite@plt
+     0.10%  mandelbrot_omp  mandelbrot_omp      [.] malloc@plt
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] __libc_enable_asynccancel
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] __GI___libc_write
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] _IO_file_write@@GLIBC_2.2.5
+     0.01%  mandelbrot_omp  ld-2.27.so          [.] strcmp
+     0.01%  mandelbrot_omp  libc-2.27.so        [.] _dl_addr
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_relocate_object
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] do_lookup_x
+     0.00%  mandelbrot_omp  [kernel]            [k] 0xffffffff8c000158
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] __run_exit_handlers
+     0.00%  mandelbrot_omp  [unknown]           [.] 0000000000000000
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] __libc_disable_asynccancel
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] _IO_do_write@@GLIBC_2.2.5
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] __sbrk
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] sysmalloc
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] __sched_cpucount
      0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_map_object_from_fd
-     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_allocate_tls_storage
-     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_map_object_deps
-     0.00%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6a0
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] dl_main
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_new_object
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] memmove
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] __GI___tunables_init
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_next_ld_env_entry
      0.00%  mandelbrot_omp  libpthread-2.27.so  [.] start_thread
-     0.00%  mandelbrot_omp  libc-2.27.so        [.] __ctype_init
-     0.00%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019e20
-     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_start
-     0.00%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019d56
-     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_sysdep_start
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_fixup
      0.00%  mandelbrot_omp  libc-2.27.so        [.] __clone
-     0.00%  mandelbrot_omp  libpthread-2.27.so  [.] _setjmp@plt
-     0.00%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x0000000000019d3e
-     0.00%  mandelbrot_omp  libgomp.so.1.0.0    [.] 0x000000000001c6d7
      0.00%  mandelbrot_omp  libpthread-2.27.so  [.] __ctype_init@plt
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_sysdep_start
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] _setjmp
+     0.00%  mandelbrot_omp  libc-2.27.so        [.] __ctype_init
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _dl_start
+     0.00%  mandelbrot_omp  ld-2.27.so          [.] _start
 
 
 #
