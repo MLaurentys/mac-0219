@@ -1,3 +1,28 @@
+ Performance counter stats for './mandelbrot_pth -0.188 -0.012 0.554 0.754 16 32' (13 runs):
+
+          2.277744      task-clock (msec)         #    0.852 CPUs utilized            ( +-  1.86% )
+                19      context-switches          #    0.008 M/sec                    ( +- 11.89% )
+                 2      cpu-migrations            #    0.001 M/sec                    ( +- 26.24% )
+               135      page-faults               #    0.059 M/sec                    ( +-  0.25% )
+         7,369,268      cycles                    #    3.235 GHz                      ( +-  1.91% )
+         4,553,354      instructions              #    0.62  insn per cycle           ( +-  0.22% )
+           729,522      branches                  #  320.283 M/sec                    ( +-  0.27% )
+            20,281      branch-misses             #    2.78% of all branches          ( +-  1.83% )
+
+       0.002672615 seconds time elapsed                                          ( +-  9.63% )
+
+ Performance counter stats for './mandelbrot_pth -0.188 -0.012 0.554 0.754 32 32' (13 runs):
+
+          3.615896      task-clock (msec)         #    1.903 CPUs utilized            ( +-  0.61% )
+                40      context-switches          #    0.011 M/sec                    ( +-  6.65% )
+                 4      cpu-migrations            #    0.001 M/sec                    ( +- 12.60% )
+               142      page-faults               #    0.039 M/sec                    ( +-  0.25% )
+        11,830,392      cycles                    #    3.272 GHz                      ( +-  0.52% )
+         8,972,021      instructions              #    0.76  insn per cycle           ( +-  0.23% )
+         1,120,146      branches                  #  309.784 M/sec                    ( +-  0.34% )
+            23,281      branch-misses             #    2.08% of all branches          ( +-  1.01% )
+
+       0.001900132 seconds time elapsed                                          ( +-  3.02% )
 
  Performance counter stats for './mandelbrot_pth -0.188 -0.012 0.554 0.754 64 32' (13 runs):
 

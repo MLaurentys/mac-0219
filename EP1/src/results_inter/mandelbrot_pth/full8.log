@@ -4,52 +4,62 @@
 #
 # Total Lost Samples: 0
 #
-# Samples: 20K of event 'cycles:uppp'
-# Event count (approx.): 1024401622
+# Samples: 22K of event 'cycles:uppp'
+# Event count (approx.): 1062618483
 #
-# Overhead  Command         Shared Object       Symbol                              
-# ........  ..............  ..................  ....................................
+# Overhead  Command         Shared Object       Symbol                            
+# ........  ..............  ..................  ..................................
 #
-    74.82%  mandelbrot_pth  mandelbrot_pth      [.] compute_mandelbrot_pth
-     7.33%  mandelbrot_pth  libc-2.27.so        [.] _IO_fwrite
-     5.38%  mandelbrot_pth  mandelbrot_pth      [.] update_rgb_buffer
-     5.32%  mandelbrot_pth  libc-2.27.so        [.] _int_malloc
-     1.45%  mandelbrot_pth  libc-2.27.so        [.] malloc
-     1.41%  mandelbrot_pth  mandelbrot_pth      [.] allocate_image_buffer
-     1.18%  mandelbrot_pth  libc-2.27.so        [.] _IO_file_xsputn@@GLIBC_2.2.5
-     0.90%  mandelbrot_pth  [kernel]            [k] 0xffffffff8c0009e7
-     0.83%  mandelbrot_pth  mandelbrot_pth      [.] write_to_file
-     0.66%  mandelbrot_pth  libc-2.27.so        [.] __memmove_avx_unaligned_erms
-     0.19%  mandelbrot_pth  libc-2.27.so        [.] @plt
-     0.16%  mandelbrot_pth  libc-2.27.so        [.] __mempcpy_avx_unaligned_erms
-     0.14%  mandelbrot_pth  mandelbrot_pth      [.] malloc@plt
-     0.13%  mandelbrot_pth  mandelbrot_pth      [.] fwrite@plt
-     0.01%  mandelbrot_pth  libc-2.27.so        [.] __libc_enable_asynccancel
-     0.01%  mandelbrot_pth  libc-2.27.so        [.] sysmalloc
-     0.01%  mandelbrot_pth  libc-2.27.so        [.] __GI___libc_write
-     0.01%  mandelbrot_pth  ld-2.27.so          [.] _dl_fixup
+    72.97%  mandelbrot_pth  mandelbrot_pth      [.] compute_mandelbrot_pth
+     7.53%  mandelbrot_pth  libc-2.27.so        [.] _IO_fwrite
+     6.53%  mandelbrot_pth  libc-2.27.so        [.] _int_malloc
+     5.32%  mandelbrot_pth  mandelbrot_pth      [.] update_rgb_buffer
+     1.92%  mandelbrot_pth  libc-2.27.so        [.] malloc
+     1.63%  mandelbrot_pth  mandelbrot_pth      [.] allocate_image_buffer
+     1.14%  mandelbrot_pth  libc-2.27.so        [.] _IO_file_xsputn@@GLIBC_2.2.5
+     0.94%  mandelbrot_pth  [kernel]            [k] 0xffffffff822009e7
+     0.71%  mandelbrot_pth  libc-2.27.so        [.] __memmove_avx_unaligned_erms
+     0.65%  mandelbrot_pth  mandelbrot_pth      [.] write_to_file
+     0.17%  mandelbrot_pth  libc-2.27.so        [.] __mempcpy_avx_unaligned_erms
+     0.15%  mandelbrot_pth  mandelbrot_pth      [.] fwrite@plt
+     0.13%  mandelbrot_pth  libc-2.27.so        [.] @plt
+     0.10%  mandelbrot_pth  mandelbrot_pth      [.] malloc@plt
      0.01%  mandelbrot_pth  libc-2.27.so        [.] _dl_addr
-     0.01%  mandelbrot_pth  ld-2.27.so          [.] _dl_relocate_object
-     0.01%  mandelbrot_pth  libc-2.27.so        [.] __getpagesize
-     0.00%  mandelbrot_pth  libc-2.27.so        [.] __sbrk
-     0.00%  mandelbrot_pth  libc-2.27.so        [.] _IO_link_in
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] dl_main
-     0.00%  mandelbrot_pth  libc-2.27.so        [.] intel_check_word.isra.0
-     0.00%  mandelbrot_pth  libc-2.27.so        [.] __mpn_construct_double
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_map_object_deps
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] openaux
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_check_map_versions
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] __GI___tunables_init
-     0.00%  mandelbrot_pth  libpthread-2.27.so  [.] start_thread
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] rtld_lock_default_lock_recursive
+     0.01%  mandelbrot_pth  libc-2.27.so        [.] sysmalloc
+     0.01%  mandelbrot_pth  libc-2.27.so        [.] __libc_disable_asynccancel
+     0.01%  mandelbrot_pth  ld-2.27.so          [.] strcmp
+     0.01%  mandelbrot_pth  ld-2.27.so          [.] _dl_lookup_symbol_x
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] _IO_file_overflow@@GLIBC_2.2.5
+     0.00%  mandelbrot_pth  [kernel]            [k] 0xffffffff82200158
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __GI___libc_write
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] _IO_default_xsputn
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] _IO_do_write@@GLIBC_2.2.5
      0.00%  mandelbrot_pth  ld-2.27.so          [.] do_lookup_x
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_start
-     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_sysdep_start
-     0.00%  mandelbrot_pth  libc-2.27.so        [.] __clone
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_relocate_object
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __libc_pthread_init
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_load_cache_lookup
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __GI_____strtod_l_internal
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __cxa_atexit
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_setup_hash
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] __GI___tunables_init
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] strchr
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_check_map_versions
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] get_common_indeces.constprop.1
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] _IO_doallocbuf
+     0.00%  mandelbrot_pth  libpthread-2.27.so  [.] __free_tcb
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_fixup
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __GI___libc_open
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __munmap
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_deallocate_tls
      0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_runtime_resolve_xsavec
+     0.00%  mandelbrot_pth  libpthread-2.27.so  [.] start_thread
+     0.00%  mandelbrot_pth  ld-2.27.so          [.] _dl_start
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] __clone
+     0.00%  mandelbrot_pth  libc-2.27.so        [.] _setjmp
+     0.00%  mandelbrot_pth  libpthread-2.27.so  [.] _pthread_cleanup_push
+     0.00%  mandelbrot_pth  libpthread-2.27.so  [.] __GI___pthread_timedjoin_ex
      0.00%  mandelbrot_pth  libc-2.27.so        [.] __ctype_init
      0.00%  mandelbrot_pth  ld-2.27.so          [.] _start
-     0.00%  mandelbrot_pth  libpthread-2.27.so  [.] __ctype_init@plt
      0.00%  mandelbrot_pth  [unknown]           [.] 0000000000000000
 
 

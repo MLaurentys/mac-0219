@@ -1,3 +1,28 @@
+ Performance counter stats for './mandelbrot_pth -2.5 1.5 -2.0 2.0 16 32' (13 runs):
+
+          4.338353      task-clock (msec)         #    1.048 CPUs utilized            ( +- 14.11% )
+                18      context-switches          #    0.004 M/sec                    ( +- 14.32% )
+                 2      cpu-migrations            #    0.443 K/sec                    ( +- 39.26% )
+               135      page-faults               #    0.031 M/sec                    ( +-  0.26% )
+         5,927,108      cycles                    #    1.366 GHz                      ( +-  1.65% )
+         3,430,682      instructions              #    0.58  insn per cycle           ( +-  0.49% )
+           643,189      branches                  #  148.256 M/sec                    ( +-  0.50% )
+            20,543      branch-misses             #    3.19% of all branches          ( +-  2.42% )
+
+       0.004140224 seconds time elapsed                                          ( +- 13.29% )
+
+ Performance counter stats for './mandelbrot_pth -2.5 1.5 -2.0 2.0 32 32' (13 runs):
+
+          2.082631      task-clock (msec)         #    1.188 CPUs utilized            ( +-  1.36% )
+                23      context-switches          #    0.011 M/sec                    ( +-  6.23% )
+                 2      cpu-migrations            #    0.997 K/sec                    ( +- 16.77% )
+               142      page-faults               #    0.068 M/sec                    ( +-  0.33% )
+         6,736,677      cycles                    #    3.235 GHz                      ( +-  1.44% )
+         4,334,701      instructions              #    0.64  insn per cycle           ( +-  0.31% )
+           750,474      branches                  #  360.349 M/sec                    ( +-  0.34% )
+            20,696      branch-misses             #    2.76% of all branches          ( +-  1.17% )
+
+       0.001752325 seconds time elapsed                                          ( +-  3.16% )
 
  Performance counter stats for './mandelbrot_pth -2.5 1.5 -2.0 2.0 64 32' (13 runs):
 

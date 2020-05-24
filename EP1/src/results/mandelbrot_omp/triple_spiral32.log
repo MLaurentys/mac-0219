@@ -1,3 +1,28 @@
+ Performance counter stats for './mandelbrot_omp -0.188 -0.012 0.554 0.754 16 32' (13 runs):
+
+          2.947084      task-clock (msec)         #    1.167 CPUs utilized            ( +-  1.86% )
+               117      context-switches          #    0.040 M/sec                    ( +-  0.47% )
+                19      cpu-migrations            #    0.006 M/sec                    ( +-  6.53% )
+               145      page-faults               #    0.049 M/sec                    ( +-  0.32% )
+         9,336,750      cycles                    #    3.168 GHz                      ( +-  1.60% )
+         5,030,960      instructions              #    0.54  insn per cycle           ( +-  0.25% )
+           881,529      branches                  #  299.119 M/sec                    ( +-  0.25% )
+            24,433      branch-misses             #    2.77% of all branches          ( +-  1.44% )
+
+       0.002524721 seconds time elapsed                                          ( +-  8.61% )
+
+ Performance counter stats for './mandelbrot_omp -0.188 -0.012 0.554 0.754 32 32' (13 runs):
+
+          4.048235      task-clock (msec)         #    1.871 CPUs utilized            ( +-  0.65% )
+               117      context-switches          #    0.029 M/sec                    ( +-  0.49% )
+                17      cpu-migrations            #    0.004 M/sec                    ( +-  6.03% )
+               152      page-faults               #    0.038 M/sec                    ( +-  0.26% )
+        13,090,492      cycles                    #    3.234 GHz                      ( +-  0.60% )
+         9,110,312      instructions              #    0.70  insn per cycle           ( +-  0.12% )
+         1,373,147      branches                  #  339.197 M/sec                    ( +-  0.15% )
+            24,738      branch-misses             #    1.80% of all branches          ( +-  1.12% )
+
+       0.002163184 seconds time elapsed                                          ( +-  2.93% )
 
  Performance counter stats for './mandelbrot_omp -0.188 -0.012 0.554 0.754 64 32' (13 runs):
 

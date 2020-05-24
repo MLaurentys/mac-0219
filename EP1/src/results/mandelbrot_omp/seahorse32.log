@@ -1,3 +1,28 @@
+ Performance counter stats for './mandelbrot_omp -0.8 -0.7 0.05 0.15 16 32' (13 runs):
+
+          2.822886      task-clock (msec)         #    1.132 CPUs utilized            ( +-  1.51% )
+               116      context-switches          #    0.041 M/sec                    ( +-  0.55% )
+                23      cpu-migrations            #    0.008 M/sec                    ( +-  9.89% )
+               146      page-faults               #    0.052 M/sec                    ( +-  0.36% )
+         8,987,893      cycles                    #    3.184 GHz                      ( +-  1.54% )
+         4,876,164      instructions              #    0.54  insn per cycle           ( +-  0.41% )
+           863,558      branches                  #  305.913 M/sec                    ( +-  0.41% )
+            24,276      branch-misses             #    2.81% of all branches          ( +-  1.49% )
+
+       0.002493167 seconds time elapsed                                          ( +- 10.26% )
+
+ Performance counter stats for './mandelbrot_omp -0.8 -0.7 0.05 0.15 32 32' (13 runs):
+
+          3.985262      task-clock (msec)         #    1.715 CPUs utilized            ( +-  2.36% )
+               117      context-switches          #    0.029 M/sec                    ( +-  0.37% )
+                15      cpu-migrations            #    0.004 M/sec                    ( +-  6.09% )
+               154      page-faults               #    0.039 M/sec                    ( +-  0.33% )
+        12,871,204      cycles                    #    3.230 GHz                      ( +-  2.31% )
+         8,667,085      instructions              #    0.67  insn per cycle           ( +-  2.00% )
+         1,332,523      branches                  #  334.363 M/sec                    ( +-  2.33% )
+            25,811      branch-misses             #    1.94% of all branches          ( +-  3.43% )
+
+       0.002323986 seconds time elapsed                                          ( +-  4.11% )
 
  Performance counter stats for './mandelbrot_omp -0.8 -0.7 0.05 0.15 64 32' (13 runs):
 
