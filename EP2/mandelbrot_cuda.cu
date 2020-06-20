@@ -7,31 +7,25 @@
 #include <helper_cuda.h>
 #include <cuda.h>
 
-// Specified parameters for the Triple Spiral Valley 
-double c_x_min;
-double c_x_max;
-double c_y_min;
-double c_y_max;
+// Device global variables
+__device__ double c_x_min;
+__device__ double c_x_max;
+__device__ double c_y_min;
+__device__ double c_y_max;
 
-double pixel_width;
-double pixel_height;
+__device__ double pixel_width;
+__device__ double pixel_height;
 
-int iteration_max = 200;
+__device__ int iteration_max = 200;
 
-int image_size;
-unsigned char* image_buffer_host;
+__device__ int image_size;
+__device__ int image_buffer_size;
 
-int i_x_max;
-int i_y_max;
-int image_buffer_size;
+__device__ int num_threads;
+__device__ int pixels_per_thread;
 
-int num_blocks;
-int th_per_block;
-__device__ dvc_num_blocks;
-
-
-int gradient_size = 16;
-int colors[17][3] = {
+__device__ int gradient_size = 16;
+__device__ int colors[17][3] = {
     {66, 30, 15},
     {25, 7, 26},
     {9, 1, 47},
@@ -51,7 +45,21 @@ int colors[17][3] = {
     {16, 16, 16},
 };
 
+// Host global variables
+int num_blocks, th_per_block;
+int host_image_buffer_size;
+unsigned char* image_buffer_host;
+
+int i_x_max;
+int i_y_max;
+
+// Get global variables from command line args
 void init(int argc, char* argv[]) {
+    // host variables
+    double host_c_x_min, host_c_x_max;
+    double host_c_y_min, host_c_y_max;
+    int host_image_size;
+
     if (argc < 8) {
         printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max"
             " image_size NUM_BLOCKS TH_PER_BLOCK\n");
@@ -63,31 +71,58 @@ void init(int argc, char* argv[]) {
         exit(0);
     }
     else {
-        sscanf(argv[1], "%lf", &c_x_min);
-        sscanf(argv[2], "%lf", &c_x_max);
-        sscanf(argv[3], "%lf", &c_y_min);
-        sscanf(argv[4], "%lf", &c_y_max);
-        sscanf(argv[5], "%d", &image_size);
+        sscanf(argv[1], "%lf", &host_c_x_min);
+        sscanf(argv[2], "%lf", &host_c_x_max);
+        sscanf(argv[3], "%lf", &host_c_y_min);
+        sscanf(argv[4], "%lf", &host_c_y_max);
+        sscanf(argv[5], "%d", &host_image_size);
         sscanf(argv[6], "%d", &num_blocks);
-        sscanf(argv[7], "%d", &th_per_block
+        sscanf(argv[7], "%d", &th_per_block);
 
-            i_x_max = image_size;
-        i_y_max = image_size;
-        image_buffer_size = image_size * image_size;
+        host_image_buffer_size = host_image_size * host_image_size;
+        int host_num_threads = num_blocks * th_per_block;
+        int host_pixels_per_thread = host_image_buffer_size / host_num_threads;
 
-        pixel_width = (c_x_max - c_x_min) / i_x_max;
-        pixel_height = (c_y_max - c_y_min) / i_y_max;
+        i_x_max = host_image_size;
+        i_y_max = host_image_size;
+        double host_pixel_width = (host_c_x_max - host_c_x_min) / i_x_max;
+        double host_pixel_height = (host_c_y_max - host_c_y_min) / i_y_max;
+
+        // copy host variables to device
+        cudaMemcpyToSymbol(c_x_min, &host_c_x_min, sizeof(double));
+        cudaMemcpyToSymbol(c_x_max, &host_c_x_max, sizeof(double));
+        cudaMemcpyToSymbol(c_y_min, &host_c_y_min, sizeof(double));
+        cudaMemcpyToSymbol(c_y_max, &host_c_y_max, sizeof(double));
+        cudaMemcpyToSymbol(image_size, &host_image_size, sizeof(int));
+        cudaMemcpyToSymbol(num_threads, &host_num_threads, sizeof(int));
+        cudaMemcpyToSymbol(pixel_width, &host_pixel_width, sizeof(double));
+        cudaMemcpyToSymbol(pixel_height, &host_pixel_height, sizeof(double));
+        cudaMemcpyToSymbol(pixels_per_thread, &host_pixels_per_thread, sizeof(int));
+        cudaMemcpyToSymbol(image_buffer_size, &host_image_buffer_size, sizeof(int));
+
     };
 };
 
-/**
- * CUDA Kernel Device code
- *
- * Computes the vector addition of A and B into C. The 3 vectors have the same
- * number of elements numElements.
- */
+__device__
+void update_rgb_buffer(unsigned char* image_buffer_device, int iteration, int x, int y) {
+    int color;
+
+    if (iteration == iteration_max) {
+        image_buffer_device[((image_size * y) + x)*3 + 0] = colors[gradient_size][0];
+        image_buffer_device[((image_size * y) + x)*3 + 1] = colors[gradient_size][1];
+        image_buffer_device[((image_size * y) + x)*3 + 2] = colors[gradient_size][2];
+    }
+    else {
+        color = iteration % gradient_size;
+        image_buffer_device[((image_size * y) + x)*3 + 0] = colors[color][0];
+        image_buffer_device[((image_size * y) + x)*3 + 1] = colors[color][1];
+        image_buffer_device[((image_size * y) + x)*3 + 2] = colors[color][2];
+    };
+};
+
 __global__
-void compute_mandelbrot(unsigned char* image_buffer_device, int buffer_size, int row_size) {
+void compute_mandelbrot(unsigned char* image_buffer_device) {
+
     double z_x;
     double z_y;
     double z_x_squared;
@@ -101,36 +136,36 @@ void compute_mandelbrot(unsigned char* image_buffer_device, int buffer_size, int
     double c_x;
     double c_y;
 
+    int my_thread = blockDim.x * blockIdx.x + threadIdx.x;
+
+    // what thread will process each pixel ?
+    //
     // Example: image 5x5 -> buffer_size = 25
     // 3 blocks of 3 threads -> 9 threads
-    // 
-    // what thread will process each pixel:
+    //
     // 2 4 7 - -
     // 1 4 6 - -
     // 1 3 6 8 -
     // 0 3 5 8 -
     // 0 2 5 7 -
     // 
-    // 1 3 4 6 8
-    // 1 2 4 6 7
-    // 0 2 4 5 7
-    // 0 2 3 5 7
-    // 0 1 3 5 6
-    //
     // and the remaining pixels we process separetedly,
-    // each thread process some remaining pixels in the end
-
-    int pixels_per_thread = size / (blockDim.x * #numeroDeBlocos)
-    int my_thread = blockDim.x * blockIdx.x + threadIdx.x;
+    // each thread process its remaining pixel in the end
+    //
+    // 2 4 7 5 0
+    // 1 4 6 6 1
+    // 1 3 6 8 2
+    // 0 3 5 8 3
+    // 0 2 5 7 4
 
     // Its easier to process by pixels instead of by row-collunm
-    int init_pixel = my_thread * pixels_per_thread;
-    int end_pixel = init_pixel + pixels_per_thread;
+    int pix = my_thread * pixels_per_thread;
+    int end_pixel = pix + pixels_per_thread;
+    int my_rem_pixel = image_buffer_size - my_thread - 1;
 
-    for (int pix = init_pixel; pix < end_pixel; pix++) {
-
-        i_y = pix / row_size;
-        i_x = pix % row_size;
+    while (pix <= my_rem_pixel) {
+        i_y = pix / image_size;
+        i_x = pix % image_size;
 
         c_y = c_y_min + i_y * pixel_height;
         if (fabs(c_y) < pixel_height / 2) {
@@ -156,15 +191,15 @@ void compute_mandelbrot(unsigned char* image_buffer_device, int buffer_size, int
             z_y_squared = z_y * z_y;
         };
         update_rgb_buffer(image_buffer_device, iteration, i_x, i_y);
-    }
-    // Remaining pixels
-    int num_threads = blockDim.x * #numeroDeBlocos;
-    int first_remaining_pixel = buffer_size - (num_threads * pixels_per_thread);
-    int rem_pixel_per_thread = (buffer_size - first_remaining_pixel)/num_threads + 1;
-    int my_first_rem = first_remaining_pixel + rem_pixel_per_thread * my_thread;
-    int my_last_rem = my_rem_pix + rem_pixel_per_thread;
-    // For dos pixels remanescente para fazer ainda
 
+        pix++;
+
+        // Treat remaining pixel
+        if (pix == end_pixel) {
+            if (my_rem_pixel >= pix) pix = my_rem_pixel;
+            else break;
+        }
+    }
 }
 
 void allocate_image_buffer(unsigned char** image_buffer_device, size_t size) {
@@ -186,25 +221,6 @@ void allocate_image_buffer(unsigned char** image_buffer_device, size_t size) {
         fprintf(stderr, "Failed to allocate device vector A (error code %s)!\n", cudaGetErrorString(err));
         exit(EXIT_FAILURE);
     }
-};
-
-
-
-void update_rgb_buffer(unsigned char* image_buffer_device, int iteration, int x, int y) {
-    int color;
-
-    if (iteration == iteration_max) {
-        image_buffer_device[(i_y_max * y) + x + 0] = colors[gradient_size][0];
-        image_buffer_device[(i_y_max * y) + x + 1] = colors[gradient_size][1];
-        image_buffer_device[(i_y_max * y) + x + 2] = colors[gradient_size][2];
-    }
-    else {
-        color = iteration % gradient_size;
-
-        image_buffer_device[(i_y_max * y) + x + 0] = colors[color][0];
-        image_buffer_device[(i_y_max * y) + x + 1] = colors[color][1];
-        image_buffer_device[(i_y_max * y) + x + 2] = colors[color][2];
-    };
 };
 
 /*
@@ -229,29 +245,21 @@ void write_to_file() {
 */
 
 int main(int argc, char* argv[]) {
-    cudaError_t err;
-    
+
     init(argc, argv);
 
+    cudaError_t err;
     int rgb_size = 3;
-    size_t size = image_buffer_size * rgb_size;
-    err = cudaMemcpyToSymbol(dvc_num_blocks, &num_blocks, sizeof(int));
-    if (err != cudaSuccess) {
-        printf("Failed to set value to device variable (error code"
-        " %s)!\n", cudaGetErrorString(err));
-    }
-    cudaDeviceSynchronize();
+    size_t size = host_image_buffer_size * rgb_size;
+
     unsigned char* image_buffer_device;
     allocate_image_buffer(&image_buffer_device, size);
 
-    // Launch the Vector Add CUDA Kernel
-    int threadsPerBlock = 256;
-    int blocksPerGrid = (image_size + threadsPerBlock - 1) / threadsPerBlock;
-    compute_mandelbrot << <num_blocks, th_per_block >> > (
-        image_buffer_device, image_buffer_size, image_size);
+    // Launch compute_mandelbrot CUDA Kernel
+    compute_mandelbrot<<<num_blocks, th_per_block>>>(image_buffer_device);
     cudaDeviceSynchronize();
     err = cudaGetLastError();
-
+    
     if (err != cudaSuccess) {
         fprintf(stderr, "Failed to launch compute_mandelbrot kernel"
             " (error code %s)!\n", cudaGetErrorString(err));
@@ -267,8 +275,9 @@ int main(int argc, char* argv[]) {
             " (error code %s)!\n", cudaGetErrorString(err));
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < 10; i++)
-        printf("host[%d] = %u\n", i, image_buffer_host[i]);
+    for (int i = 0; i < size; i += 3)
+        // Temporary print to debug
+        printf("host[%d] = R%u G%u B%u\n", i/3, image_buffer_host[i], image_buffer_host[i+1], image_buffer_host[i+2]);
 
     // Free device global memory
     err = cudaFree(image_buffer_device);
