@@ -237,7 +237,7 @@ void write_to_file() {
         i_x_max, i_y_max, max_color_component_value);
 
     for (int i = 0; i < host_image_buffer_size; i++) {
-        fwrite(image_buffer_host + i, 1, 3, file);
+        fwrite(image_buffer_host + 3*i, 1, 3, file);
     };
 
     fclose(file);
@@ -250,7 +250,6 @@ int main(int argc, char* argv[]) {
     cudaError_t err;
     int rgb_size = 3;
     size_t size = host_image_buffer_size * rgb_size;
-    printf("meu size é %d\n", size);
 
     unsigned char* image_buffer_device;
     allocate_image_buffer(&image_buffer_device, size);
