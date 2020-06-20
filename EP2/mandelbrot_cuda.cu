@@ -104,19 +104,19 @@ void init(int argc, char* argv[]) {
 };
 
 __device__
-void update_rgb_buffer(unsigned char* image_buffer_device, int iteration, int x, int y) {
+void update_rgb_buffer(unsigned char* image_buffer_device, int iteration, int pix) {
     int color;
 
     if (iteration == iteration_max) {
-        image_buffer_device[((image_size * y) + x)*3 + 0] = colors[gradient_size][0];
-        image_buffer_device[((image_size * y) + x)*3 + 1] = colors[gradient_size][1];
-        image_buffer_device[((image_size * y) + x)*3 + 2] = colors[gradient_size][2];
+        image_buffer_device[pix * 3 + 0] = colors[gradient_size][0];
+        image_buffer_device[pix * 3 + 1] = colors[gradient_size][1];
+        image_buffer_device[pix * 3 + 2] = colors[gradient_size][2];
     }
     else {
         color = iteration % gradient_size;
-        image_buffer_device[((image_size * y) + x)*3 + 0] = colors[color][0];
-        image_buffer_device[((image_size * y) + x)*3 + 1] = colors[color][1];
-        image_buffer_device[((image_size * y) + x)*3 + 2] = colors[color][2];
+        image_buffer_device[pix * 3 + 0] = colors[color][0];
+        image_buffer_device[pix * 3 + 1] = colors[color][1];
+        image_buffer_device[pix * 3 + 2] = colors[color][2];
     };
 };
 
@@ -190,7 +190,8 @@ void compute_mandelbrot(unsigned char* image_buffer_device) {
             z_x_squared = z_x * z_x;
             z_y_squared = z_y * z_y;
         };
-        update_rgb_buffer(image_buffer_device, iteration, i_x, i_y);
+        //printf("set pix %d\n", pix);
+        update_rgb_buffer(image_buffer_device, iteration, pix);
 
         pix++;
 
@@ -223,7 +224,6 @@ void allocate_image_buffer(unsigned char** image_buffer_device, size_t size) {
     }
 };
 
-/*
 void write_to_file() {
     FILE* file;
     char* filename = "output.ppm";
@@ -236,13 +236,12 @@ void write_to_file() {
     fprintf(file, "P6\n %s\n %d\n %d\n %d\n", comment,
         i_x_max, i_y_max, max_color_component_value);
 
-    for (int i = 0; i < image_buffer_size; i++) {
-        fwrite(image_buffer[i], 1, 3, file);
+    for (int i = 0; i < host_image_buffer_size; i++) {
+        fwrite(image_buffer_host + i, 1, 3, file);
     };
 
     fclose(file);
 };
-*/
 
 int main(int argc, char* argv[]) {
 
@@ -251,6 +250,7 @@ int main(int argc, char* argv[]) {
     cudaError_t err;
     int rgb_size = 3;
     size_t size = host_image_buffer_size * rgb_size;
+    printf("meu size é %d\n", size);
 
     unsigned char* image_buffer_device;
     allocate_image_buffer(&image_buffer_device, size);
@@ -275,9 +275,9 @@ int main(int argc, char* argv[]) {
             " (error code %s)!\n", cudaGetErrorString(err));
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < size; i += 3)
+    //for (int i = 0; i < size; i += 3)
         // Temporary print to debug
-        printf("host[%d] = R%u G%u B%u\n", i/3, image_buffer_host[i], image_buffer_host[i+1], image_buffer_host[i+2]);
+        //printf("host[%d] = R%u G%u B%u\n", i/3, image_buffer_host[i], image_buffer_host[i+1], image_buffer_host[i+2]);
 
     // Free device global memory
     err = cudaFree(image_buffer_device);
@@ -286,6 +286,8 @@ int main(int argc, char* argv[]) {
             " %s)!\n", cudaGetErrorString(err));
         exit(EXIT_FAILURE);
     }
+
+    write_to_file();
     // Free host memory
     free(image_buffer_host);
 
