@@ -3,8 +3,6 @@
 
 // For the CUDA runtime routines (prefixed with "cuda_")
 #include <cuda_runtime.h>
-
-#include <helper_cuda.h>
 #include <cuda.h>
 
 // Device global variables
@@ -53,6 +51,15 @@ unsigned char* image_buffer_host;
 int i_x_max;
 int i_y_max;
 
+int check (cudaError_t& err, const char* msg) {
+    if (err != cudaSuccess) {
+        printf ("%s", msg);
+        printf (" | Error: %s\n", cudaGetErrorString(err));
+        return 1;
+    }
+    return 0;
+}
+
 // Get global variables from command line args
 void init(int argc, char* argv[]) {
     // host variables
@@ -64,13 +71,12 @@ void init(int argc, char* argv[]) {
         printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max"
             " image_size NUM_BLOCKS TH_PER_BLOCK\n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_seq -2.5 1.5 -2.0 2.0 11500 4 64\n");
-        printf("    Seahorse Valley:      ./mandelbrot_seq -0.8 -0.7 0.05 0.15 11500 4 64\n");
-        printf("    Elephant Valley:      ./mandelbrot_seq 0.175 0.375 -0.1 0.1 11500 4 64\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_seq -0.188 -0.012 0.554 0.754 11500 4 64\n");
+        printf("    Full Picture:         ./mandelbrot_cuda -2.5 1.5 -2.0 2.0 11500 4 64\n");
+        printf("    Seahorse Valley:      ./mandelbrot_cuda -0.8 -0.7 0.05 0.15 11500 4 64\n");
+        printf("    Elephant Valley:      ./mandelbrot_cuda 0.175 0.375 -0.1 0.1 11500 4 64\n");
+        printf("    Triple Spiral Valley: ./mandelbrot_cuda -0.188 -0.012 0.554 0.754 11500 4 64\n");
         exit(0);
-    }
-    else {
+    } else {
         sscanf(argv[1], "%lf", &host_c_x_min);
         sscanf(argv[2], "%lf", &host_c_x_max);
         sscanf(argv[3], "%lf", &host_c_y_min);
@@ -89,6 +95,7 @@ void init(int argc, char* argv[]) {
         double host_pixel_height = (host_c_y_max - host_c_y_min) / i_y_max;
 
         // copy host variables to device
+        cudaError_t err = cudaSuccess;
         cudaMemcpyToSymbol(c_x_min, &host_c_x_min, sizeof(double));
         cudaMemcpyToSymbol(c_x_max, &host_c_x_max, sizeof(double));
         cudaMemcpyToSymbol(c_y_min, &host_c_y_min, sizeof(double));
@@ -99,7 +106,9 @@ void init(int argc, char* argv[]) {
         cudaMemcpyToSymbol(pixel_height, &host_pixel_height, sizeof(double));
         cudaMemcpyToSymbol(pixels_per_thread, &host_pixels_per_thread, sizeof(int));
         cudaMemcpyToSymbol(image_buffer_size, &host_image_buffer_size, sizeof(int));
-
+        err = cudaGetLastError();
+        if (check(err, "Failed to copy command line args to device"))
+            exit(EXIT_FAILURE);
     };
 };
 
@@ -190,7 +199,7 @@ void compute_mandelbrot(unsigned char* image_buffer_device) {
             z_x_squared = z_x * z_x;
             z_y_squared = z_y * z_y;
         };
-        //printf("set pix %d\n", pix);
+        
         update_rgb_buffer(image_buffer_device, iteration, pix);
 
         pix++;
@@ -214,20 +223,18 @@ void allocate_image_buffer(unsigned char** image_buffer_device, size_t size) {
     err = cudaMalloc((void**)(image_buffer_device), size);
 
     // Test alloc success
-    if (*image_buffer_host == NULL) {
+    if (image_buffer_host == NULL) {
         fprintf(stderr, "Failed to allocate host vectors!\n");
         exit(EXIT_FAILURE);
     }
-    if (err != cudaSuccess) {
-        fprintf(stderr, "Failed to allocate device vector A (error code %s)!\n", cudaGetErrorString(err));
+    if (check(err, "Failed to allocate device image buffer"))
         exit(EXIT_FAILURE);
-    }
 };
 
 void write_to_file() {
     FILE* file;
-    char* filename = "output.ppm";
-    char* comment = "# ";
+    const char* filename = "output.ppm";
+    const char* comment = "# ";
 
     int max_color_component_value = 255;
 
@@ -258,33 +265,20 @@ int main(int argc, char* argv[]) {
     compute_mandelbrot<<<num_blocks, th_per_block>>>(image_buffer_device);
     cudaDeviceSynchronize();
     err = cudaGetLastError();
-    
-    if (err != cudaSuccess) {
-        fprintf(stderr, "Failed to launch compute_mandelbrot kernel"
-            " (error code %s)!\n", cudaGetErrorString(err));
+    if (check(err, "Failed to launch compute_mandelbrot kernel"))
         exit(EXIT_FAILURE);
-    }
 
     // Copy the device result vector in device memory to the host result vector
     // in host memory.
     err = cudaMemcpy(image_buffer_host, image_buffer_device, size,
         cudaMemcpyDeviceToHost);
-    if (err != cudaSuccess) {
-        fprintf(stderr, "Failed to copy vector from device to host"
-            " (error code %s)!\n", cudaGetErrorString(err));
+    if (check(err, "Failed to copy vector from device to host"))
         exit(EXIT_FAILURE);
-    }
-    //for (int i = 0; i < size; i += 3)
-        // Temporary print to debug
-        //printf("host[%d] = R%u G%u B%u\n", i/3, image_buffer_host[i], image_buffer_host[i+1], image_buffer_host[i+2]);
 
     // Free device global memory
     err = cudaFree(image_buffer_device);
-    if (err != cudaSuccess) {
-        fprintf(stderr, "Failed to free device vector (error code"
-            " %s)!\n", cudaGetErrorString(err));
+    if (check(err, "Failed to free device vector"))
         exit(EXIT_FAILURE);
-    }
 
     write_to_file();
     // Free host memory
