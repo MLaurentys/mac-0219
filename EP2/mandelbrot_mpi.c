@@ -124,22 +124,22 @@ void write_to_file(){
 };
 
 
-void sendGlobalsMPI () {
+void sendGlobalsMPI (MPI_Comm globals) {
 
-    MPI_Bcast (&c_x_min, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&c_x_max, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&c_y_min, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&c_y_max, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast (&c_x_min, 1, MPI_DOUBLE, 0, globals);
+    MPI_Bcast (&c_x_max, 1, MPI_DOUBLE, 0, globals);
+    MPI_Bcast (&c_y_min, 1, MPI_DOUBLE, 0, globals);
+    MPI_Bcast (&c_y_max, 1, MPI_DOUBLE, 0, globals);
 
-    MPI_Bcast (&pixel_height, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&pixel_width , 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast (&pixel_height, 1, MPI_DOUBLE, 0, globals);
+    MPI_Bcast (&pixel_width , 1, MPI_DOUBLE, 0, globals);
 
-    MPI_Bcast (&iteration_max, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&i_x_max      , 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&i_y_max      , 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast (&iteration_max, 1, MPI_INT, 0, globals);
+    MPI_Bcast (&i_x_max      , 1, MPI_INT, 0, globals);
+    MPI_Bcast (&i_y_max      , 1, MPI_INT, 0, globals);
 
-    MPI_Bcast (&gradient_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast (&colors, 17 * 3, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast (&gradient_size, 1, MPI_INT, 0, globals);
+    MPI_Bcast (&colors, 17 * 3, MPI_INT, 0, globals);
 
 };
 
@@ -192,6 +192,8 @@ int main(int argc, char *argv[]){
     int size, rank, chunksize, leftover, n, begin_y, end_y, tag1, tag2, source, dest;
     MPI_Status status;
 
+    MPI_Comm globals;
+
     init (argc, argv);
 
     //compute_mandelbrot();
@@ -217,9 +219,12 @@ int main(int argc, char *argv[]){
     //send and receive tags
     tag1 = 1; //ints
     tag2 = 2; //matrix
-double pixel_height2 = pixel_height;
-    MPI_Bcast (&pixel_height2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    sendGlobalsMPI ();
+    double pixel_height2 = pixel_height;
+
+    //MPI_Bcast (&pixel_height2, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Comm_dup (MPI_COMM_WORLD, &globals);
+
+    sendGlobalsMPI (globals);
 
     // MASTER TASK
     if (rank == MASTER){
@@ -268,8 +273,8 @@ double pixel_height2 = pixel_height;
         source = MASTER;
         MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
         MPI_Recv (&end_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        //MPI_Recv (&pixel_height  , 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
         MPI_Recv (&image_buffer, chunksize, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
+
 
     printf ("O:%f\n", pixel_height);
         /* Do my part of the work */
@@ -353,9 +358,7 @@ double pixel_height2 = pixel_height;
         MPI_Send(&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
         MPI_Send(&image_buffer, image_size, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
 
-        /* Use sum reduction operation to obtain final sum */
-        //MPI_Reduce(&image_buffer, &image_buffer, 1, MPI_UNSIGNED_CHAR, MPI_SUM, MASTER, MPI_COMM_WORLD);
-
+        //int x = MPI_Comm_Free (&globals);
     } /* end of non-master */
 
     MPI_Finalize();
