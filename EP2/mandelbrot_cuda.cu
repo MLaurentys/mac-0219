@@ -61,7 +61,7 @@ int check (cudaError_t& err, const char* msg) {
 }
 
 // Get global variables from command line args
-void init(int argc, char* argv[]) {
+void init (int argc, char* argv[]) {
     // host variables
     double host_c_x_min, host_c_x_max;
     double host_c_y_min, host_c_y_max;
@@ -120,8 +120,7 @@ void update_rgb_buffer(unsigned char* image_buffer_device, int iteration, int pi
         image_buffer_device[pix * 3 + 0] = colors[gradient_size][0];
         image_buffer_device[pix * 3 + 1] = colors[gradient_size][1];
         image_buffer_device[pix * 3 + 2] = colors[gradient_size][2];
-    }
-    else {
+    } else {
         color = iteration % gradient_size;
         image_buffer_device[pix * 3 + 0] = colors[color][0];
         image_buffer_device[pix * 3 + 1] = colors[color][1];
@@ -195,7 +194,6 @@ void compute_mandelbrot(unsigned char* image_buffer_device) {
             iteration++) {
             z_y = 2 * z_x * z_y + c_y;
             z_x = z_x_squared - z_y_squared + c_x;
-
             z_x_squared = z_x * z_x;
             z_y_squared = z_y * z_y;
         };

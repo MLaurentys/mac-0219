@@ -22,24 +22,24 @@ int image_buffer_size;
 
 int gradient_size = 16;
 int colors[17][3] = {
-                        {66, 30, 15},
-                        {25, 7, 26},
-                        {9, 1, 47},
-                        {4, 4, 73},
-                        {0, 7, 100},
-                        {12, 44, 138},
-                        {24, 82, 177},
-                        {57, 125, 209},
-                        {134, 181, 229},
-                        {211, 236, 248},
-                        {241, 233, 191},
-                        {248, 201, 95},
-                        {255, 170, 0},
-                        {204, 128, 0},
-                        {153, 87, 0},
-                        {106, 52, 3},
-                        {16, 16, 16},
-                    };
+    {66, 30, 15},
+    {25, 7, 26},
+    {9, 1, 47},
+    {4, 4, 73},
+    {0, 7, 100},
+    {12, 44, 138},
+    {24, 82, 177},
+    {57, 125, 209},
+    {134, 181, 229},
+    {211, 236, 248},
+    {241, 233, 191},
+    {248, 201, 95},
+    {255, 170, 0},
+    {204, 128, 0},
+    {153, 87, 0},
+    {106, 52, 3},
+    {16, 16, 16},
+};
 
 void allocate_image_buffer(){
     int rgb_size = 3;
@@ -75,10 +75,9 @@ void init(int argc, char *argv[]){
         sscanf(argv[5], "%d", &image_size);
         //sscanf(argv[6], "%d", &n_threads); // new addition
 
-
         i_x_max           = image_size;
         i_y_max           = image_size;
-        image_buffer_size = image_size * image_size;
+        image_buffer_size = image_size * image_size; // 50 * 50 = 2500
 
         pixel_width       = (c_x_max - c_x_min) / i_x_max;
         pixel_height      = (c_y_max - c_y_min) / i_y_max;
@@ -92,13 +91,24 @@ void init2 () {
     i_y_max           = image_size;
     image_buffer_size = image_size * image_size;
 
+    printf("max = %f | min = %f\n", c_x_max, c_x_min);
     pixel_width       = (c_x_max - c_x_min) / i_x_max;
     pixel_height      = (c_y_max - c_y_min) / i_y_max;
+    printf("width = %f | height = %f\n", pixel_width, pixel_height);
 }
 
 void update_rgb_buffer(int iteration, int x, int y, unsigned char** image_buffer){
     int color;
-
+    int rank;
+    MPI_Comm_rank (MPI_COMM_WORLD,&rank);
+    // if (rank > MASTER) {
+    //     printf("Slave updated\n");
+    //     printf("x:%d y:%d\n", x, y);
+    //     printf("y_max:%d\n", i_y_max);
+    //     printf("iteration:%d\n", iteration);
+    //     printf("gradient size:%d\n", gradient_size);
+    //     printf ("index: %d", (i_y_max * y) + x);
+    // }
     if(iteration == iteration_max){
         image_buffer[(i_y_max * y) + x][0] = colors[gradient_size][0];
         image_buffer[(i_y_max * y) + x][1] = colors[gradient_size][1];
@@ -113,7 +123,7 @@ void update_rgb_buffer(int iteration, int x, int y, unsigned char** image_buffer
     };
 };
 
-void write_to_file(){
+void write_to_file () {
     FILE * file;
     char * filename               = "output.ppm";
     char * comment                = "# ";
@@ -128,12 +138,10 @@ void write_to_file(){
     for(int i = 0; i < image_buffer_size; i++){
         fwrite(image_buffer[i], 1 , 3, file);
     };
-
     fclose(file);
 };
 
-
-void compute_mandelbrot (int begin_y, int end_y, unsigned char** image_buffer){
+void compute_mandelbrot (int begin_y, int end_y, unsigned char** image_buffer) {
 
     double z_x;
     double z_y;
@@ -143,12 +151,24 @@ void compute_mandelbrot (int begin_y, int end_y, unsigned char** image_buffer){
 
     int iteration;
     int i_x;
-    int i_y;
+    int i_y, i_y_local;
 
     double c_x;
     double c_y;
 
-    for(i_y = begin_y; i_y < end_y; i_y++){
+    int rank;
+    MPI_Comm_rank (MPI_COMM_WORLD,&rank);
+
+    if (rank > MASTER) {
+        printf("Slave start computation\n");
+        printf("Pixel:%f %f\n", pixel_height, pixel_width);
+        printf("Iter max:%d\n", iteration_max);
+        printf ("I_X_MAX (tem que ser igual a image_size):%d\n", i_x_max);
+        printf("colors: %d %d %d\n", colors[2][0], colors[2][1], colors[2][2]);
+    }
+
+    for(i_y_local = 0; i_y_local < end_y - begin_y; i_y_local++){
+        i_y = i_y_local + begin_y;
         c_y = c_y_min + i_y * pixel_height;
 
         //printf ("%f, %f\n", c_y_min, pixel_height);
@@ -156,7 +176,7 @@ void compute_mandelbrot (int begin_y, int end_y, unsigned char** image_buffer){
         if(fabs(c_y) < pixel_height / 2)
             c_y = 0.0;
 
-        for(i_x = 0; i_x < i_x_max; i_x++){
+        for(i_x = 0; i_x < i_x_max; i_x++) {
             c_x         = c_x_min + i_x * pixel_width;
             z_x         = 0.0;
             z_y         = 0.0;
@@ -170,13 +190,16 @@ void compute_mandelbrot (int begin_y, int end_y, unsigned char** image_buffer){
                 z_x         = z_x_squared - z_y_squared + c_x;
                 z_x_squared = z_x * z_x;
                 z_y_squared = z_y * z_y;
-            };
-            update_rgb_buffer (iteration, i_x, i_y, image_buffer);
-            //printf("%d, %d\n", i_x, i_y);
-        };
-    };
-   //return image_buffer;
-};
+            }
+            update_rgb_buffer (iteration, i_x, i_y_local, image_buffer);
+        }
+    }
+
+    if (rank > MASTER) {
+        printf("Slave end computation\n");
+        printf("Pixel:%f %f", pixel_height, pixel_width);
+    }
+}
 
 int main(int argc, char *argv[]){
     int size, rank, rows, chunksize, leftover, n, begin_y, end_y, tag1, tag2, source, dest;
@@ -199,12 +222,10 @@ int main(int argc, char *argv[]){
 
     MPI_Bcast (&i_y_max      , 1, MPI_INT, 0, MPI_COMM_WORLD);
 //////// Perform work in parallel//////////////////////////////////////
-
     MPI_Comm_size (MPI_COMM_WORLD, &size);
     MPI_Comm_rank (MPI_COMM_WORLD,&rank);
 
     rows = image_size / size;
-
     chunksize = image_buffer_size / size;
     leftover  = image_buffer_size % size; //cant be distributed equally if > 0
 
@@ -213,50 +234,43 @@ int main(int argc, char *argv[]){
     tag2 = 2; //matrix
 
     // MASTER TASK
-    if (rank == MASTER){
+    if (rank == MASTER) {
         allocate_image_buffer();
         printf("mpi_mm has started with %d tasks.\n",size);
-
-    
         /* Send each task its portion of the work, some more than others (+1) */
         begin_y = rows;
         end_y = begin_y + rows;
         for (dest = 1; dest < size; dest++) {
-            end_y = (dest <= leftover) ? end_y++ : end_y;
-            //MPI_Send  (&rows, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            MPI_Send  (&image_buffer[1249][0], 1250, MPI_UNSIGNED_CHAR, dest, tag2, MPI_COMM_WORLD);
+            if (dest <= leftover) end_y++;
+            int offset = (end_y - begin_y) * 3;
+
             MPI_Send  (&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&i_x_max, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&i_y_max, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&iteration_max, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&image_size, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-
-            //MPI_Send  (&pixel_height  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-            
-            //MPI_Send  (&pixel_height  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&pixel_width  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-
             MPI_Send  (&c_x_min  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&c_x_max  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-          //  MPI_Send  (&c_y_min  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&c_y_max , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-            printf ("Sent %d elements to task %d offset = %d\n", rows, dest, begin_y);
-            begin_y += rows;
+            MPI_Send  ((void*)image_buffer[begin_y], offset, MPI_UNSIGNED_CHAR,
+                       dest, tag2, MPI_COMM_WORLD);
+
+            printf ("Sent %d elements to task %d. To compute: %d\n", offset, dest, offset);
+            begin_y = end_y;
             end_y += rows;
         }
 
         /* Master does its part of the work */
         //end_y = begin_y + chunksize + leftover;
         //mysum = update (offset, chunksize+leftover, taskid);
+        printf("Master inicia compute\n");
         compute_mandelbrot (0, rows, image_buffer);
+        printf("Master acaba compute\n");
 
         /* Wait to receive results from each task */
         for (int i = 1; i < size; i++) {
             source = i;
             MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
             MPI_Recv (&end_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-            MPI_Recv (&image_buffer[1249][0], 1250, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
+            int chunksize = (end_y - begin_y) * 3;
+            MPI_Recv (image_buffer[begin_y], chunksize, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
         }
 
         /* Get final sum and print sample results */
@@ -266,91 +280,40 @@ int main(int argc, char *argv[]){
 
         write_to_file();
     }  /* end of master section */
+
     //WORKER TASK
     if (rank > MASTER) {
-        printf ("C: %d\n", rows);
+        
         /* Receive my portion of matrix from the master task */
-
         source = MASTER;
-        //MPI_Recv (&rows, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        MPI_Recv (&image_buffer, 1250, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
+        
         MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
         MPI_Recv (&end_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
         MPI_Recv (&image_size, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        //MPI_Recv (&i_x_max, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        //MPI_Recv (&i_y_max, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-
         MPI_Recv (&c_x_min , 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
-        //printf ("F:%f\n", c_x_min);
         MPI_Recv (&c_x_max, 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
-        //MPI_Recv (&c_y_min , 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
-       // MPI_Recv (&c_y_max , 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
+        int offset = (end_y - begin_y) * 3;
+        MPI_Recv (&image_buffer, offset, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
 
-        init2 ();
+        init2();
 
-        printf ("O:%d\n", begin_y); 
+        allocate_image_buffer ();
 
-        printf ("F:%f\n", pixel_width); 
         /* Do my part of the work */
-        double z_x, z_y, z_x_squared, z_y_squared, escape_radius_squared = 4;
 
-        int iteration, i_x, i_y;
+        printf ("teste %c\n", image_buffer[0][0]);
 
-        double c_x, c_y;
-
-   // printf ("O:%f\n", pixel_height2);
-    for(i_y = begin_y; i_y < end_y; i_y++){
-        c_y = c_y_min + i_y * pixel_height;
-
-        //printf ("%f, %f\n", c_y_min, pixel_height);
-
-        if(fabs(c_y) < pixel_height / 2)
-            c_y = 0.0;
-
-        for(i_x = 0; i_x < i_x_max; i_x++){
-            c_x         = c_x_min + i_x * pixel_width;
-            z_x         = 0.0;
-            z_y         = 0.0;
-            z_x_squared = 0.0;
-            z_y_squared = 0.0;
-
-            for(iteration = 0; iteration < iteration_max && \
-                ((z_x_squared + z_y_squared) < escape_radius_squared);
-                iteration++){
-                z_y         = 2 * z_x * z_y + c_y;
-                z_x         = z_x_squared - z_y_squared + c_x;
-                z_x_squared = z_x * z_x;
-                z_y_squared = z_y * z_y;
-            };
-
-            //(iteration, i_x, i_y, image_buffer);
-            int color;
-
-            printf("AA:%d\n", (i_y_max * i_y) + i_x);
-
-            if(iteration == iteration_max){
-                image_buffer[(i_y_max * i_y) + i_x][0] = colors[gradient_size][0];
-                image_buffer[(i_y_max * i_y) + i_x][1] = colors[gradient_size][1];
-                image_buffer[(i_y_max * i_y) + i_x][2] = colors[gradient_size][2];
-            }
-            else {
-                color = iteration % gradient_size;
-
-                image_buffer[(i_y_max * i_y) + i_x][0] = colors[color][0];
-                image_buffer[(i_y_max * i_y) + i_x][1] = colors[color][1];
-                image_buffer[(i_y_max * i_y) + i_x][2] = colors[color][2];
-            };
-            //printf("%d, %d\n", i_x, i_y);
-        }
-    }
-
+        compute_mandelbrot(begin_y, end_y, image_buffer);
+        
         /* Send my results back to the master task */
         dest = MASTER;
         MPI_Send(&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
         MPI_Send(&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-        MPI_Send(&image_buffer, 1250, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
+
+        MPI_Send((void*)image_buffer, (end_y - begin_y) * 3, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
 
         //int x = MPI_Comm_Free (&globals);
+        
     } /* end of non-master */
 
     MPI_Finalize();
