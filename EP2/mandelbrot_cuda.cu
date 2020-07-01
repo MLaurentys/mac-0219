@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 
 // For the CUDA runtime routines (prefixed with "cuda_")
@@ -20,6 +19,7 @@ __device__ int image_size;
 __device__ int image_buffer_size;
 
 __device__ int num_threads;
+__device__ int th_per_block;
 __device__ int pixels_per_thread;
 
 __device__ int gradient_size = 16;
@@ -44,7 +44,9 @@ __device__ int colors[17][3] = {
 };
 
 // Host global variables
-int num_blocks, th_per_block;
+dim3 num_blocks, threads_per_block;
+int num_blocks_x, th_per_block_x;
+int num_blocks_y, th_per_block_y;
 int host_image_buffer_size;
 unsigned char* image_buffer_host;
 
@@ -60,6 +62,15 @@ int check (cudaError_t& err, const char* msg) {
     return 0;
 }
 
+void print_bad_arguments () {
+    printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max"
+    " image_size NUM_BLOCKS TH_PER_BLOCK \n");
+    printf("examples with image_size = 11500:\n");
+    printf("    Full Picture:         ./mandelbrot_cuda -2.5 1.5 -2.0 2.0 11500 4 64 \n");
+    printf("    Seahorse Valley:      ./mandelbrot_cuda -0.8 -0.7 0.05 0.15 11500 4 64 \n");
+    printf("    Elephant Valley:      ./mandelbrot_cuda 0.175 0.375 -0.1 0.1 11500 4 64 \n");
+    printf("    Triple Spiral Valley: ./mandelbrot_cuda -0.188 -0.012 0.554 0.754 11500 4 64 \n");
+}
 // Get global variables from command line args
 void init (int argc, char* argv[]) {
     // host variables
@@ -68,32 +79,42 @@ void init (int argc, char* argv[]) {
     int host_image_size;
 
     if (argc < 8) {
-        printf("usage: ./mandelbrot_seq c_x_min c_x_max c_y_min c_y_max"
-            " image_size NUM_BLOCKS TH_PER_BLOCK\n");
-        printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_cuda -2.5 1.5 -2.0 2.0 11500 4 64\n");
-        printf("    Seahorse Valley:      ./mandelbrot_cuda -0.8 -0.7 0.05 0.15 11500 4 64\n");
-        printf("    Elephant Valley:      ./mandelbrot_cuda 0.175 0.375 -0.1 0.1 11500 4 64\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_cuda -0.188 -0.012 0.554 0.754 11500 4 64\n");
+        print_bad_arguments();
         exit(0);
-    } else {
+    }
+    else {
+        num_blocks_y = th_per_block_y = 1;
+
         sscanf(argv[1], "%lf", &host_c_x_min);
         sscanf(argv[2], "%lf", &host_c_x_max);
         sscanf(argv[3], "%lf", &host_c_y_min);
         sscanf(argv[4], "%lf", &host_c_y_max);
         sscanf(argv[5], "%d", &host_image_size);
-        sscanf(argv[6], "%d", &num_blocks);
-        sscanf(argv[7], "%d", &th_per_block);
+        sscanf(argv[6], "%d", &num_blocks_x);
+        if (argc == 8) {
+            sscanf(argv[7], "%d", &th_per_block_x);
+        }
+        else if (argc == 10) {
+            sscanf(argv[7], "%d", &num_blocks_y);
+            sscanf(argv[8], "%d", &th_per_block_x);
+            sscanf(argv[9], "%d", &th_per_block_y);
+        }
+        else {
+            print_bad_arguments();
+            exit(0);
+        }
 
         host_image_buffer_size = host_image_size * host_image_size;
-        int host_num_threads = num_blocks * th_per_block;
+
+        int host_th_per_block = th_per_block_x * th_per_block_y;
+        int host_num_threads = host_th_per_block * num_blocks_x * num_blocks_y;
+
         int host_pixels_per_thread = host_image_buffer_size / host_num_threads;
 
         i_x_max = host_image_size;
         i_y_max = host_image_size;
         double host_pixel_width = (host_c_x_max - host_c_x_min) / i_x_max;
         double host_pixel_height = (host_c_y_max - host_c_y_min) / i_y_max;
-
         // copy host variables to device
         cudaError_t err = cudaSuccess;
         cudaMemcpyToSymbol(c_x_min, &host_c_x_min, sizeof(double));
@@ -102,6 +123,7 @@ void init (int argc, char* argv[]) {
         cudaMemcpyToSymbol(c_y_max, &host_c_y_max, sizeof(double));
         cudaMemcpyToSymbol(image_size, &host_image_size, sizeof(int));
         cudaMemcpyToSymbol(num_threads, &host_num_threads, sizeof(int));
+        cudaMemcpyToSymbol(th_per_block, &host_th_per_block, sizeof(int));
         cudaMemcpyToSymbol(pixel_width, &host_pixel_width, sizeof(double));
         cudaMemcpyToSymbol(pixel_height, &host_pixel_height, sizeof(double));
         cudaMemcpyToSymbol(pixels_per_thread, &host_pixels_per_thread, sizeof(int));
@@ -144,29 +166,34 @@ void compute_mandelbrot(unsigned char* image_buffer_device) {
     double c_x;
     double c_y;
 
-    int my_thread = blockDim.x * blockIdx.x + threadIdx.x;
+    // Calculates pixel where current thread will start its work
+    int my_block = blockIdx.x + gridDim.x * blockIdx.y;
+    int my_thread_in_block = threadIdx.x + blockDim.x * threadIdx.y;
 
-    // what thread will process each pixel ?
-    //
-    // Example: image 5x5 -> buffer_size = 25
-    // 3 blocks of 3 threads -> 9 threads
-    //
-    // 2 4 7 - -
-    // 1 4 6 - -
-    // 1 3 6 8 -
-    // 0 3 5 8 -
-    // 0 2 5 7 -
-    // 
-    // and the remaining pixels we process separetedly,
-    // each thread process its remaining pixel in the end
-    //
-    // 2 4 7 5 0
-    // 1 4 6 6 1
-    // 1 3 6 8 2
-    // 0 3 5 8 3
-    // 0 2 5 7 4
+    int my_thread = my_block * th_per_block + my_thread_in_block;
 
-    // Its easier to process by pixels instead of by row-collunm
+    /* what thread will process each pixel ?
+     *
+     * Example: image 5x5 -> buffer_size = 25
+     * 3 blocks of 3 threads -> 9 threads
+     *
+     * 2 4 7 - -
+     * 1 4 6 - -
+     * 1 3 6 8 -
+     * 0 3 5 8 -
+     * 0 2 5 7 -
+     *
+     * and the remaining pixels we process separetedly,
+     * each thread process its remaining pixel in the end
+     *
+     * 2 4 7 5 0
+     * 1 4 6 6 1
+     * 1 3 6 8 2
+     * 0 3 5 8 3
+     * 0 2 5 7 4
+     */
+
+     // Its easier to process by pixels instead of by row-collunm
     int pix = my_thread * pixels_per_thread;
     int end_pixel = pix + pixels_per_thread;
     int my_rem_pixel = image_buffer_size - my_thread - 1;
@@ -211,7 +238,7 @@ void compute_mandelbrot(unsigned char* image_buffer_device) {
 }
 
 void allocate_image_buffer(unsigned char** image_buffer_device, size_t size) {
-    // Our buffer, instead of a matrix, will be a big array
+    // Our buffer, instead of a matrix, will be a continuous array
 
     // Allocate host memory
     image_buffer_host = (unsigned char*)malloc(sizeof(unsigned char) * size);
@@ -233,7 +260,6 @@ void write_to_file() {
     FILE* file;
     const char* filename = "output.ppm";
     const char* comment = "# ";
-
     int max_color_component_value = 255;
 
     file = fopen(filename, "wb");
@@ -244,12 +270,10 @@ void write_to_file() {
     for (int i = 0; i < host_image_buffer_size; i++) {
         fwrite(image_buffer_host + 3*i, 1, 3, file);
     };
-
     fclose(file);
 };
 
 int main(int argc, char* argv[]) {
-
     init(argc, argv);
 
     cudaError_t err;
@@ -260,7 +284,9 @@ int main(int argc, char* argv[]) {
     allocate_image_buffer(&image_buffer_device, size);
 
     // Launch compute_mandelbrot CUDA Kernel
-    compute_mandelbrot<<<num_blocks, th_per_block>>>(image_buffer_device);
+    num_blocks = dim3(num_blocks_x, num_blocks_y);
+    threads_per_block = dim3(th_per_block_x, th_per_block_y);
+    compute_mandelbrot<<<num_blocks, threads_per_block>>>(image_buffer_device);
     cudaDeviceSynchronize();
     err = cudaGetLastError();
     if (check(err, "Failed to launch compute_mandelbrot kernel"))
