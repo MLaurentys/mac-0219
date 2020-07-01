@@ -85,7 +85,7 @@ void init(int argc, char *argv[]){
     };
 };
 
-void init_slave (char *argv[], int chunksize) {
+void init_worker (char *argv[], int chunksize) {
     sscanf(argv[1], "%lf", &c_x_min);
     sscanf(argv[2], "%lf", &c_x_max);
     sscanf(argv[3], "%lf", &c_y_min);
@@ -117,16 +117,13 @@ void update_rgb_buffer (int iteration, int x, int y){
     };
 };
 
-void update_rgb_buffer_slave (int iteration, int x, int y, int begin_y){
+void update_rgb_buffer_worker (int iteration, int x, int y, int begin_y){
     int color, offset, index;
 
     offset = begin_y * i_y_max;
 
     index = y * i_y_max + x - offset;
-    /*
-    int rank;
-    MPI_Comm_rank (MPI_COMM_WORLD,&rank);
-*/
+
     if(iteration == iteration_max){
         image_buffer[index][0] = colors[gradient_size][0];
         image_buffer[index][1] = colors[gradient_size][1];
@@ -177,13 +174,11 @@ void compute_mandelbrot (int begin_y, int end_y) {
     MPI_Comm_rank (MPI_COMM_WORLD,&rank);
 
     if (rank > MASTER) {
-        printf("Slave %d start computation\n", rank);
+        printf("worker %d starts computation\n", rank);
     }
 
     for(i_y = begin_y; i_y < end_y; i_y++){
         c_y = c_y_min + i_y * pixel_height;
-
-        //printf ("%f, %f\n", c_y_min, pixel_height);
 
         if(fabs(c_y) < pixel_height / 2)
             c_y = 0.0;
@@ -203,19 +198,16 @@ void compute_mandelbrot (int begin_y, int end_y) {
                 z_x_squared = z_x * z_x;
                 z_y_squared = z_y * z_y;
             }
-            if (rank == MASTER) {
-
+            if (rank == MASTER) 
                 update_rgb_buffer (iteration, i_x, i_y);
-            }
-            else {
-                //printf ("%d\n", count++);
-                update_rgb_buffer_slave (iteration, i_x, i_y, begin_y);
-            }
+            
+            else 
+                update_rgb_buffer_worker (iteration, i_x, i_y, begin_y);
         }
     }
 
     if (rank > MASTER) {
-        printf("Slave %d ends computation\n", rank);
+        printf("worker %d ends computation\n", rank);
     }
 }
 
@@ -223,25 +215,14 @@ int main(int argc, char *argv[]){
     int size, rank, rows, chunksize, leftover, n, begin_y, end_y, tag1, tag2, source, dest;
     MPI_Status status;
 
-    MPI_Comm globals;
-
     init (argc, argv);
 
-    //compute_mandelbrot();
-
-    /***** Initializations *****/
-    /*
-    MPI_Initialized(&initialized);
-    if (!initialized)
-       MPI_Init(NULL, NULL);
-    */
+    /*Start MPI */
 
     MPI_Init (&argc, &argv);
 
-    MPI_Bcast (&i_y_max      , 1, MPI_INT, 0, MPI_COMM_WORLD);
-//////// Perform work in parallel//////////////////////////////////////
     MPI_Comm_size (MPI_COMM_WORLD, &size);
-    MPI_Comm_rank (MPI_COMM_WORLD,&rank);
+    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
     rows = image_size / size;
     chunksize = image_buffer_size / size;
@@ -262,12 +243,9 @@ int main(int argc, char *argv[]){
             if (dest <= leftover) end_y++;
             chunksize = (end_y - begin_y) * 3 * image_size;
 
-            MPI_Send  (&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            MPI_Send  (&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+            MPI_Send  ( &begin_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+            MPI_Send  (  &end_y   , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&image_size, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&c_x_min  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-            //MPI_Send  (&c_x_max  , 1, MPI_DOUBLE, dest, tag1, MPI_COMM_WORLD);
-           // MPI_Send  (image_buffer[begin_y * i_x_max], chunksize, MPI_UNSIGNED_CHAR, dest, tag2, MPI_COMM_WORLD);
 
             printf ("Sent %d elements to task %d. To start: %d\n", chunksize, dest, begin_y * i_x_max);
             begin_y = end_y;
@@ -275,24 +253,20 @@ int main(int argc, char *argv[]){
         }
 
         /* Master does its part of the work */
-        //end_y = begin_y + chunksize + leftover;
-        //mysum = update (offset, chunksize+leftover, taskid);
-        printf("Master inicia compute\n");
+        printf("Master starts computation\n");
         compute_mandelbrot (0, rows);
-        printf("Master acaba compute\n");
+        printf("Master ends computation\n");
 
         /* Wait to receive results from each task */
         for (int i = 1; i < size; i++) {
             source = i;
             MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-            MPI_Recv (&end_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+            MPI_Recv ( &end_y , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
             chunksize = (end_y - begin_y) * image_size;
-            for (int i = 0; i < chunksize; i++) {
-                MPI_Recv ((image_buffer[begin_y * i_x_max + i]), 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
-            }
-        }
 
-      //  MPI_Gather (&(image_buffer[0][0]), chunksize, MPI_UNSIGNED_CHAR, &(image_buffer[0][0]), chunksize, MPI_UNSIGNED_CHAR, MASTER, MPI_COMM_WORLD);
+            for (int i = 0; i < chunksize; i++) 
+                MPI_Recv ((image_buffer[begin_y * i_x_max + i]), 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
+        }
 
         printf ("Writing to file........ \n");
 
@@ -302,38 +276,36 @@ int main(int argc, char *argv[]){
     }  /* end of master section */
 
     //WORKER TASK
-    if (rank > MASTER) {
-        
+    if (rank > MASTER) {  
         /* Receive my portion of matrix from the master task */
         source = MASTER;
         
-        MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        MPI_Recv (&end_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+        MPI_Recv ( &begin_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+        MPI_Recv (  &end_y   , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
         MPI_Recv (&image_size, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        //MPI_Recv (&c_x_min , 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
-        //MPI_Recv (&c_x_max, 1, MPI_DOUBLE, source, tag1, MPI_COMM_WORLD, &status);
+
         int chunksize = (end_y - begin_y) * image_size;
 
-        init_slave (argv, chunksize);
+        init_worker (argv, chunksize);
 
         allocate_image_buffer ();
-       // MPI_Recv (image_buffer[0], chunksize, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
 
         /* Do my part of the work */
 
-        compute_mandelbrot(begin_y, end_y);
+        compute_mandelbrot (begin_y, end_y);
         
         /* Send my results back to the master task */
         dest = MASTER;
-        MPI_Send(&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-        MPI_Send(&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+        MPI_Send (&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+        MPI_Send (&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
 
-        for (int i = 0; i < chunksize; i++) {
-            MPI_Send(&(image_buffer[i][0]), 3, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
-        }
+        for (int i = 0; i < chunksize; i++)
+            MPI_Send (&(image_buffer[i][0]), 3, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
+        
         free_image_buffer ();
         
     } /* end of non-master */
+
     MPI_Finalize();
 
     return 0;
