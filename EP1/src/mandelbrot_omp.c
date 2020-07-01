@@ -115,7 +115,7 @@ void write_to_file(){
     fclose(file);
 };
 
-void compute_mandelbrot(){
+void compute_mandelbrot() {
     double z_x;
     double z_y;
     double z_x_squared;
