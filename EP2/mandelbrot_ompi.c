@@ -14,7 +14,9 @@ double pixel_height;
 
 int iteration_max = 200;
 int image_size;
-unsigned char **image_buffer;
+unsigned char *image_buffer;
+
+const int rgb_size = 3;
 
 int i_x_max;
 int i_y_max;
@@ -41,19 +43,16 @@ int colors[17][3] = {
     {16, 16, 16},
 };
 
+int get_index (int row, int col) {
+    return row * rgb_size + col;
+}
+
 void allocate_image_buffer(){
-    int rgb_size = 3;
-    image_buffer = (unsigned char **) malloc(sizeof(unsigned char *)
-                        * image_buffer_size);
-    image_buffer[0] = (unsigned char *)
-                    malloc(sizeof(unsigned char) * image_buffer_size * rgb_size);
-    for(int i = 1; i < image_buffer_size; i++) {
-        image_buffer[i] = image_buffer[i-1] + rgb_size;
-    }
+    image_buffer = (unsigned char *) malloc(sizeof(unsigned char)
+                        * image_buffer_size * rgb_size);
 };
 
 void free_image_buffer () {
-    free(image_buffer[0]);
     free(image_buffer);
 };
 
@@ -102,38 +101,38 @@ void init_worker (char *argv[], int chunksize) {
 
 void update_rgb_buffer (int iteration, int x, int y){
     int color;
-
+    int ind = (i_y_max * y) + x;
     if(iteration == iteration_max){
-        image_buffer[(i_y_max * y) + x][0] = colors[gradient_size][0];
-        image_buffer[(i_y_max * y) + x][1] = colors[gradient_size][1];
-        image_buffer[(i_y_max * y) + x][2] = colors[gradient_size][2];
+        image_buffer[get_index(ind, 0)] = colors[gradient_size][0];
+        image_buffer[get_index(ind, 1)] = colors[gradient_size][1];
+        image_buffer[get_index(ind, 2)] = colors[gradient_size][2];
     }
     else{
         color = iteration % gradient_size;
 
-        image_buffer[(i_y_max * y) + x][0] = colors[color][0];
-        image_buffer[(i_y_max * y) + x][1] = colors[color][1];
-        image_buffer[(i_y_max * y) + x][2] = colors[color][2];
+        image_buffer[get_index(ind, 0)] = colors[color][0];
+        image_buffer[get_index(ind, 1)] = colors[color][1];
+        image_buffer[get_index(ind, 2)] = colors[color][2];
     };
 };
 
 void update_rgb_buffer_worker (int iteration, int x, int y, int begin_y){
-    int color, offset, index;
+    int color, offset, ind;
 
     offset = begin_y * i_y_max;
 
-    index = y * i_y_max + x - offset;
+    ind = y * i_y_max + x - offset;
 
     if(iteration == iteration_max){
-        image_buffer[index][0] = colors[gradient_size][0];
-        image_buffer[index][1] = colors[gradient_size][1];
-        image_buffer[index][2] = colors[gradient_size][2];
+        image_buffer[get_index(ind, 0)] = colors[gradient_size][0];
+        image_buffer[get_index(ind, 1)] = colors[gradient_size][1];
+        image_buffer[get_index(ind, 2)] = colors[gradient_size][2];
     }
     else{
         color = iteration % gradient_size;
-        image_buffer[index][0] = colors[color][0];
-        image_buffer[index][1] = colors[color][1];
-        image_buffer[index][2] = colors[color][2];
+        image_buffer[get_index(ind, 0)] = colors[color][0];
+        image_buffer[get_index(ind, 1)] = colors[color][1];
+        image_buffer[get_index(ind, 2)] = colors[color][2];
     };
 };
 
@@ -149,8 +148,8 @@ void write_to_file () {
     fprintf(file, "P6\n %s\n %d\n %d\n %d\n", comment,
             i_x_max, i_y_max, max_color_component_value);
 
-    for(int i = 0; i < image_buffer_size; i++){
-        fwrite(image_buffer[i], 1 , 3, file);
+    for (int i = 0; i < image_buffer_size*rgb_size; i+=rgb_size) {
+        fwrite(&image_buffer[i], 1 , 3, file);
     };
     fclose(file);
 };
@@ -198,17 +197,12 @@ void compute_mandelbrot (int begin_y, int end_y) {
                 z_x_squared = z_x * z_x;
                 z_y_squared = z_y * z_y;
             }
-            if (rank == MASTER) 
+            if (rank == MASTER)
                 update_rgb_buffer (iteration, i_x, i_y);
-            
             else 
                 update_rgb_buffer_worker (iteration, i_x, i_y, begin_y);
         }
     }
-
-    /*if (rank > MASTER) {
-        printf("worker %d ends computation\n", rank);
-    }*/
 }
 
 int main(int argc, char *argv[]){
@@ -252,9 +246,9 @@ int main(int argc, char *argv[]){
         }
 
         /* Master does its part of the work */
-        //printf("Master starts computation\n");
+        printf("Master starts computation\n");
         compute_mandelbrot (0, rows);
-        //printf("Master ends computation\n");
+        printf("Master ends computation\n");
 
         /* Wait to receive results from each task */
         for (int i = 1; i < size; i++) {
@@ -262,9 +256,8 @@ int main(int argc, char *argv[]){
             MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
             MPI_Recv ( &end_y , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
             chunksize = (end_y - begin_y) * image_size;
-            printf("MASTER CHUNKSIZE SIZE = %d\n", chunksize*3);
-            int start_index = begin_y * i_x_max;
-            MPI_Recv (image_buffer[start_index], chunksize * 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
+            int start_index = get_index(begin_y * i_x_max, 0);
+            MPI_Recv (&image_buffer[start_index], chunksize * 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
         }
 
         printf ("Writing to file........ \n");
@@ -297,8 +290,6 @@ int main(int argc, char *argv[]){
         dest = MASTER;
         MPI_Send (&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
         MPI_Send (&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-        printf("WORKER CHUNKSIZE SIZE = %d\n", chunksize*3);
-
         MPI_Send (image_buffer, chunksize * 3, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
 
         free_image_buffer ();
