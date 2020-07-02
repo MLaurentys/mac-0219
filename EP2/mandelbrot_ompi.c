@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#define  MASTER     0
+#define  MASTER    0
 
 double c_x_min;
 double c_x_max;
@@ -43,28 +43,28 @@ int colors[17][3] = {
 
 void allocate_image_buffer(){
     int rgb_size = 3;
-    image_buffer = (unsigned char **) malloc(sizeof(unsigned char *) * image_buffer_size);
-
-    for(int i = 0; i < image_buffer_size; i++){
-        image_buffer[i] = (unsigned char *) malloc(sizeof(unsigned char) * rgb_size);
-    };
+    image_buffer = (unsigned char **) malloc(sizeof(unsigned char *)
+                        * image_buffer_size);
+    image_buffer[0] = (unsigned char *)
+                    malloc(sizeof(unsigned char) * image_buffer_size * rgb_size);
+    for(int i = 1; i < image_buffer_size; i++) {
+        image_buffer[i] = image_buffer[i-1] + rgb_size;
+    }
 };
 
 void free_image_buffer () {
-    for(int i = 0; i < image_buffer_size; i++){
-        free (image_buffer[i]);
-    };
-    free (image_buffer);
+    free(image_buffer[0]);
+    free(image_buffer);
 };
 
 void init(int argc, char *argv[]){
     if(argc < 6){
-        printf("usage: ./mpi_mandelbrot c_x_min c_x_max c_y_min c_y_max image_size n_threads \n");
+        printf("usage: mpirun mandelbrot_ompi c_x_min c_x_max c_y_min c_y_max image_size\n");
         printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         ./mandelbrot_seq -2.5 1.5 -2.0 2.0 11500\n");
-        printf("    Seahorse Valley:      ./mandelbrot_seq -0.8 -0.7 0.05 0.15 11500\n");
-        printf("    Elephant Valley:      ./mandelbrot_seq 0.175 0.375 -0.1 0.1 11500\n");
-        printf("    Triple Spiral Valley: ./mandelbrot_seq -0.188 -0.012 0.554 0.754 11500\n");
+        printf("    Full Picture:         mpirun mandelbrot_ompi -2.5 1.5 -2.0 2.0 50\n");
+        printf("    Seahorse Valley:      mpirun mandelbrot_ompi -0.8 -0.7 0.05 0.15 50\n");
+        printf("    Elephant Valley:      mpirun mandelbrot_ompi 0.175 0.375 -0.1 0.1 50\n");
+        printf("    Triple Spiral Valley: mpirun mandelbrot_ompi -0.188 -0.012 0.554 0.754 50\n");
         exit(0);
     }
     else{
@@ -81,7 +81,7 @@ void init(int argc, char *argv[]){
         pixel_width       = (c_x_max - c_x_min) / i_x_max;
         pixel_height      = (c_y_max - c_y_min) / i_y_max;
 
-        printf ("%f, %f\n", pixel_height, pixel_width);
+        //printf ("%f, %f\n", pixel_height, pixel_width);
     };
 };
 
@@ -171,11 +171,11 @@ void compute_mandelbrot (int begin_y, int end_y) {
     double c_y;
 
     int rank;
-    MPI_Comm_rank (MPI_COMM_WORLD,&rank);
+    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
-    if (rank > MASTER) {
+    /*if (rank > MASTER) {
         printf("worker %d starts computation\n", rank);
-    }
+    }*/
 
     for(i_y = begin_y; i_y < end_y; i_y++){
         c_y = c_y_min + i_y * pixel_height;
@@ -206,9 +206,9 @@ void compute_mandelbrot (int begin_y, int end_y) {
         }
     }
 
-    if (rank > MASTER) {
+    /*if (rank > MASTER) {
         printf("worker %d ends computation\n", rank);
-    }
+    }*/
 }
 
 int main(int argc, char *argv[]){
@@ -243,19 +243,18 @@ int main(int argc, char *argv[]){
             if (dest <= leftover) end_y++;
             chunksize = (end_y - begin_y) * 3 * image_size;
 
-            MPI_Send  ( &begin_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            MPI_Send  (  &end_y   , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+            MPI_Send  (&begin_y,    1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+            MPI_Send  (&end_y,      1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&image_size, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-
             printf ("Sent %d elements to task %d. To start: %d\n", chunksize, dest, begin_y * i_x_max);
             begin_y = end_y;
             end_y += rows;
         }
 
         /* Master does its part of the work */
-        printf("Master starts computation\n");
+        //printf("Master starts computation\n");
         compute_mandelbrot (0, rows);
-        printf("Master ends computation\n");
+        //printf("Master ends computation\n");
 
         /* Wait to receive results from each task */
         for (int i = 1; i < size; i++) {
@@ -263,9 +262,9 @@ int main(int argc, char *argv[]){
             MPI_Recv (&begin_y, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
             MPI_Recv ( &end_y , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
             chunksize = (end_y - begin_y) * image_size;
-
-            for (int i = 0; i < chunksize; i++) 
-                MPI_Recv ((image_buffer[begin_y * i_x_max + i]), 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
+            printf("MASTER CHUNKSIZE SIZE = %d\n", chunksize*3);
+            int start_index = begin_y * i_x_max;
+            MPI_Recv (image_buffer[start_index], chunksize * 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
         }
 
         printf ("Writing to file........ \n");
@@ -280,8 +279,8 @@ int main(int argc, char *argv[]){
         /* Receive my portion of matrix from the master task */
         source = MASTER;
         
-        MPI_Recv ( &begin_y  , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
-        MPI_Recv (  &end_y   , 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+        MPI_Recv (&begin_y,    1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
+        MPI_Recv (&end_y,      1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
         MPI_Recv (&image_size, 1, MPI_INT, source, tag1, MPI_COMM_WORLD, &status);
 
         int chunksize = (end_y - begin_y) * image_size;
@@ -298,10 +297,10 @@ int main(int argc, char *argv[]){
         dest = MASTER;
         MPI_Send (&begin_y, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
         MPI_Send (&end_y  , 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
+        printf("WORKER CHUNKSIZE SIZE = %d\n", chunksize*3);
 
-        for (int i = 0; i < chunksize; i++)
-            MPI_Send (&(image_buffer[i][0]), 3, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
-        
+        MPI_Send (image_buffer, chunksize * 3, MPI_UNSIGNED_CHAR, MASTER, tag2, MPI_COMM_WORLD);
+
         free_image_buffer ();
         
     } /* end of non-master */
