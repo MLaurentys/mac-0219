@@ -5,6 +5,7 @@ IMAGE=.ppm
 MK_DIR = mkdir -p
 
 NVCC=nvcc
+MPI = mpicc
 CC=gcc
 CC_OPT=-std=c11
 
@@ -24,6 +25,9 @@ $(OUTPUT)_cuda: $(OUTPUT)_cuda.cu
 # $(OUTPUT)_seq: $(OUTPUT)_seq.c
 # 	$(CC) -o $(OUTPUT)_seq $(CC_OPT) $(OUTPUT)_seq.c
 
+#$(OUTPUT)_mpi: $(OUTPUT)_mpi.c
+#        $(MPI) -o $(OUTPUT)_mpi $(OUTPUT)_mpi.c
+
 .PHONY: clean
 clean:
-	rm $(OUTPUT)_omp $(OUTPUT)_pth $(OUTPUT)_seq *$(IMAGE)
+	rm $(OUTPUT)_omp $(OUTPUT)_pth $(OUTPUT)_seq *$(IMAGE) #$(OUTPUT)_mpi
