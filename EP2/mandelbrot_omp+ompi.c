@@ -5,13 +5,10 @@
 #include <math.h>
 #define  MASTER    0
 
-double c_x_min;
-double c_x_max;
-double c_y_min;
-double c_y_max;
+double c_x_min, c_x_max;
+double c_y_min, c_y_max;
 
-double pixel_width;
-double pixel_height;
+double pixel_width, pixel_height;
 
 int iteration_max = 200;
 int image_size;
@@ -19,9 +16,9 @@ unsigned char *image_buffer;
 
 const int rgb_size = 3;
 
-int i_x_max;
-int i_y_max;
+int i_x_max, i_y_max;
 int image_buffer_size;
+int n_threads;
 
 int gradient_size = 16;
 int colors[17][3] = {
@@ -59,7 +56,9 @@ void free_image_buffer () {
 
 void init(int argc, char *argv[]){
     if(argc < 6){
-        printf("usage: mpirun mandelbrot_ompi c_x_min c_x_max c_y_min c_y_max image_size\n");
+        printf("usage: mpirun mandelbrot_omp+ompi c_x_min c_x_max c_y_min c_y_max image_size n_threads\n");
+        printf("Or...: mpirun mandelbrot_omp+ompi c_x_min c_x_max c_y_min c_y_max image_size\n");
+        printf("(Default values to n_threads)\n");
         printf("examples with image_size = 11500:\n");
         printf("    Full Picture:         mpirun mandelbrot_ompi -2.5 1.5 -2.0 2.0 50\n");
         printf("    Seahorse Valley:      mpirun mandelbrot_ompi -0.8 -0.7 0.05 0.15 50\n");
@@ -73,6 +72,7 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &c_y_min);
         sscanf(argv[4], "%lf", &c_y_max);
         sscanf(argv[5], "%d", &image_size);
+        sscanf(argv[5], "%d", &n_threads);
 
         i_x_max           = image_size;
         i_y_max           = image_size;
@@ -157,30 +157,32 @@ void write_to_file () {
 
 
 void compute_mandelbrot (int begin_y, int end_y) {
-    
-    int rank;
-    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 /*
     if (rank > MASTER) {
         printf("worker %d starts computation\n", rank);
     }
 */
 
-    // Use of OMP
-    #pragma omp parallel private(begin_y, end_y) 
-    {    
-        
-        double z_x, z_y;
-        double z_x_squared, z_y_squared;
-        double escape_radius_squared = 4;
+    int iteration;
+    int i_x, i_y;
 
-        int iteration;
-        int i_x, i_y;
+    int rank;
+    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
-        double c_x, c_y;
+    double c_x, c_y;
+    double z_x, z_y;
+    double z_x_squared, z_y_squared;
+    double escape_radius_squared = 4;
 
-        #pragma omp for
+
+    /************************OMP**********************************/
+    omp_set_num_threads(n_threads);
+    #pragma omp parallel for \
+        shared (n_threads)\
+        private(i_x, z_x, z_y, z_x_squared, z_y_squared, c_y, c_x, iteration)    
+
         for (i_y = begin_y; i_y < end_y; i_y++) {
+            printf ("Thread: %d\n", omp_get_num_threads ());
             c_y = c_y_min + i_y * pixel_height;
 
             if(fabs(c_y) < pixel_height / 2)
@@ -207,7 +209,7 @@ void compute_mandelbrot (int begin_y, int end_y) {
                     update_rgb_buffer_worker (iteration, i_x, i_y, begin_y);
             }
         }
-    }
+    
 }
 
 int main(int argc, char *argv[]){
