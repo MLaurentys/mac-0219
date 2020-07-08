@@ -72,7 +72,7 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &c_y_min);
         sscanf(argv[4], "%lf", &c_y_max);
         sscanf(argv[5], "%d", &image_size);
-        if (argc > 5) sscanf(argv[6], "%d", &n_threads);
+        if (argc > 6) sscanf(argv[6], "%d", &n_threads);
         else n_threads = 0;
 
         i_x_max           = image_size;
@@ -231,7 +231,7 @@ int main(int argc, char *argv[]){
     // MASTER TASK
     if (rank == MASTER) {
         allocate_image_buffer();
-        printf("mpi_mm has started with %d tasks.\n",size);
+        printf("mpi_mm has started with %d tasks.\n", size);
         /* Send each task its portion of the work, some more than others (+1) */
         begin_y = rows;
         end_y = begin_y + rows;
