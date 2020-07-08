@@ -22,8 +22,8 @@ $(OUTPUT)_cuda: $(OUTPUT)_cuda.cu
 $(OUTPUT)_ompi: $(OUTPUT)_ompi.c
 	$(MPI) $(OUTPUT)_ompi.c -g -o $(OUTPUT)_ompi
 
-#$(OUTPUT)_mpi: $(OUTPUT)_mpi.c
-#        $(MPI) -o $(OUTPUT)_mpi $(OUTPUT)_mpi.c
+$(OUTPUT)_ompi_omp: $(OUTPUT)_ompi_omp.c
+	$(MPI) $(OUTPUT)_ompi_omp $(CC_OMP) -o $(OUTPUT)_ompi_omp
 
 .PHONY: clean
 clean:

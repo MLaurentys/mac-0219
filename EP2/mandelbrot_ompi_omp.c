@@ -56,14 +56,14 @@ void free_image_buffer () {
 
 void init(int argc, char *argv[]){
     if(argc < 6){
-        printf("usage: mpirun mandelbrot_omp+ompi c_x_min c_x_max c_y_min c_y_max image_size n_threads\n");
-        printf("Or...: mpirun mandelbrot_omp+ompi c_x_min c_x_max c_y_min c_y_max image_size\n");
+        printf("usage: mpirun mandelbrot_ompi_omp c_x_min c_x_max c_y_min c_y_max image_size n_threads\n");
+        printf("Or...: mpirun mandelbrot_ompi_omp c_x_min c_x_max c_y_min c_y_max image_size\n");
         printf("(Default values to n_threads)\n");
-        printf("examples with image_size = 11500:\n");
-        printf("    Full Picture:         mpirun mandelbrot_ompi -2.5 1.5 -2.0 2.0 50\n");
-        printf("    Seahorse Valley:      mpirun mandelbrot_ompi -0.8 -0.7 0.05 0.15 50\n");
-        printf("    Elephant Valley:      mpirun mandelbrot_ompi 0.175 0.375 -0.1 0.1 50\n");
-        printf("    Triple Spiral Valley: mpirun mandelbrot_ompi -0.188 -0.012 0.554 0.754 50\n");
+        printf("examples with image_size = 4096:\n");
+        printf("    Full Picture:         mpirun mandelbrot_ompi -2.5 1.5 -2.0 2.0 4096 4\n");
+        printf("    Seahorse Valley:      mpirun mandelbrot_ompi -0.8 -0.7 0.05 0.15 4096 4\n");
+        printf("    Elephant Valley:      mpirun mandelbrot_ompi 0.175 0.375 -0.1 0.1 4096 4\n");
+        printf("    Triple Spiral Valley: mpirun mandelbrot_ompi -0.188 -0.012 0.554 0.754 4096 4\n");
         exit(0);
     }
     else{
@@ -72,7 +72,8 @@ void init(int argc, char *argv[]){
         sscanf(argv[3], "%lf", &c_y_min);
         sscanf(argv[4], "%lf", &c_y_max);
         sscanf(argv[5], "%d", &image_size);
-        sscanf(argv[5], "%d", &n_threads);
+        if (argc > 5) sscanf(argv[6], "%d", &n_threads);
+        else n_threads = 0;
 
         i_x_max           = image_size;
         i_y_max           = image_size;
@@ -81,7 +82,6 @@ void init(int argc, char *argv[]){
         pixel_width       = (c_x_max - c_x_min) / i_x_max;
         pixel_height      = (c_y_max - c_y_min) / i_y_max;
 
-        //printf ("%f, %f\n", pixel_height, pixel_width);
     };
 };
 
@@ -157,11 +157,6 @@ void write_to_file () {
 
 
 void compute_mandelbrot (int begin_y, int end_y) {
-/*
-    if (rank > MASTER) {
-        printf("worker %d starts computation\n", rank);
-    }
-*/
 
     int iteration;
     int i_x, i_y;
@@ -176,13 +171,13 @@ void compute_mandelbrot (int begin_y, int end_y) {
 
 
     /************************OMP**********************************/
-    omp_set_num_threads(n_threads);
+    if (n_threads > 0) omp_set_num_threads(n_threads);
     #pragma omp parallel for \
         shared (n_threads)\
         private(i_x, z_x, z_y, z_x_squared, z_y_squared, c_y, c_x, iteration)    
 
         for (i_y = begin_y; i_y < end_y; i_y++) {
-            printf ("Thread: %d\n", omp_get_num_threads ());
+            // printf ("Thread: %d\n", omp_get_thread_num ());
             c_y = c_y_min + i_y * pixel_height;
 
             if(fabs(c_y) < pixel_height / 2)
@@ -253,9 +248,7 @@ int main(int argc, char *argv[]){
         }
 
         /* Master does its part of the work */
-        printf("Master starts computation\n");
         compute_mandelbrot (0, rows);
-        printf("Master ends computation\n");
 
         /* Wait to receive results from each task */
         for (int i = 1; i < size; i++) {
