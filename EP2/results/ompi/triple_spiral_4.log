@@ -1,0 +1,164 @@
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+--------------------------------------------------------------------------
+mpirun was unable to launch the specified application as it could not access
+or execute an executable:
+
+Executable: ./bin/mandelbrot_ompi
+Node: Lenovo-Ubuntu
+
+while attempting to start process rank 0.
+--------------------------------------------------------------------------
+4 total processes failed to start
+
+ Performance counter stats for 'mpirun -np 4 ./bin/mandelbrot_ompi -0.188 -0.012 0.554 0.754 4096' (15 runs):
+
+         53.428433      task-clock (msec)         #    0.425 CPUs utilized            ( +- 10.75% )
+               132      context-switches          #    0.002 M/sec                    ( +- 12.32% )
+                 8      cpu-migrations            #    0.155 K/sec                    ( +-  5.21% )
+             3,673      page-faults               #    0.069 M/sec                    ( +-  0.15% )
+       166,908,754      cycles                    #    3.124 GHz                      ( +-  0.58% )
+       169,118,382      instructions              #    1.01  insn per cycle           ( +-  0.42% )
+        36,173,103      branches                  #  677.038 M/sec                    ( +-  0.34% )
+           942,136      branch-misses             #    2.60% of all branches          ( +-  1.43% )
+
+       0.125577929 seconds time elapsed                                          ( +- 61.21% )
+
