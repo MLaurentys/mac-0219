@@ -1,31 +1,3 @@
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-./bin/mandelbrot_cuda: Interrupt
-
- Performance counter stats for './bin/mandelbrot_cuda -0.188 -0.012 0.554 0.754 4096 1 4' (15 runs):
-
-        975.217241      task-clock (msec)         #    0.981 CPUs utilized            ( +- 59.82% )
-                45      context-switches          #    0.046 K/sec                    ( +- 27.83% )
-                 2      cpu-migrations            #    0.002 K/sec                    ( +- 27.17% )
-             1,452      page-faults               #    0.001 M/sec                    ( +- 29.23% )
-     3,565,879,685      cycles                    #    3.656 GHz                      ( +- 60.05% )
-     2,740,428,291      instructions              #    0.77  insn per cycle           ( +- 63.00% )
-       598,980,640      branches                  #  614.202 M/sec                    ( +- 61.66% )
-        10,586,690      branch-misses             #    1.77% of all branches          ( +- 46.96% )
-
-       0.993976064 seconds time elapsed                                          ( +- 59.88% )
 
 
  Performance counter stats for './bin/mandelbrot_cuda -0.188 -0.012 0.554 0.754 4096 1 4' (15 runs):
