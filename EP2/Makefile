@@ -15,8 +15,8 @@ CC_PTH=-pthread
 .PHONY: all
 all: $(OUTPUT)_omp $(OUTPUT)_pth $(OUTPUT)_seq $(OUTPUT)_ompi $(OUTPUT)_ompi_omp $(OUTPUT)_cuda
 
-#$(OUTPUT)_cuda: $(OUTPUT)_cuda.cu
-	#$(NVCC) $(OUTPUT)_cuda.cu -o $(OUT_DIR)/$(OUTPUT)_cuda
+$(OUTPUT)_cuda: $(OUTPUT)_cuda.cu
+	$(NVCC) $(OUTPUT)_cuda.cu -o $(OUT_DIR)/$(OUTPUT)_cuda
 
 $(OUTPUT)_ompi: $(OUTPUT)_ompi.c
 	$(MPI) $(OUTPUT)_ompi.c -g -o $(OUT_DIR)/$(OUTPUT)_ompi
