@@ -6,9 +6,8 @@ MEASUREMENTS=15
 SIZE=4096
 
 # CUDA parameters
-#CUDA_BLOCKS=('1' '512' '1024' '2048')
-#THREADS=('4')
-#CUDA_RUN="./bin/mandelbrot_cuda"
+CUDA_BLOCKS=('1' '512' '1024' '2048')
+CUDA_RUN="./bin/mandelbrot_cuda"
 
 # OMPI parameters
 NUM_TASKS=('4' '8' '16' '32' '64')
@@ -16,26 +15,24 @@ MPI_RUN="mpirun -np"
 MPI_BIN="./bin/mandelbrot_ompi"
 
 # OMPI+OMP parameters
-NUM_THREADS=('1','2', '4', '8', '16', '32', '64')
-MPI_RUN="mpirun -np"
 MPI_OMP_BIN="./bin/mandelbrot_ompi_omp"
 
 MKDIR='mkdir -p'
 
-#make
+make
 ${MKDIR} results
 ${MKDIR} results/cuda
 ${MKDIR} results/ompi
 ${MKDIR} results/ompi_omp
 
-#for BLOCKS in ${CUDA_BLOCKS[@]}; do
-#    for ((THREADS=4; THREADS<=2048; THREADS*=2)); do
-#        perf stat -r $MEASUREMENTS $CUDA_RUN -0.188 -0.012 0.554 0.754 $SIZE $BLOCKS\
-#                     $THREADS >> triple_spiral_"$BLOCKS"_"$THREADS".log 2>&1
-#    done
-#done
+for BLOCKS in ${CUDA_BLOCKS[@]}; do
+    for ((THREADS=4; THREADS<=2048; THREADS*=2)); do
+        perf stat -r $MEASUREMENTS $CUDA_RUN -0.188 -0.012 0.554 0.754 $SIZE $BLOCKS\
+                     $THREADS >> triple_spiral_"$BLOCKS"_"$THREADS".log 2>&1
+    done
+done
 
-#mv *.log results/cuda/
+mv *.log results/cuda/
 
 for ((i = 0; i < ${#NUM_TASKS[@]}; i+=1)) do
     perf stat -r $MEASUREMENTS $MPI_RUN ${NUM_TASKS[$i]} $MPI_BIN -0.188 -0.012 0.554 0.754 $SIZE\
@@ -51,4 +48,4 @@ for ((i = 0; i < ${#NUM_TASKS[@]}; i+=1)) do
 done
 mv *.log results/ompi_omp/
 
-#rm output.ppm
+rm output.ppm
