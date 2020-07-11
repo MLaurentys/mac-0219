@@ -11,7 +11,7 @@ SIZE=4096
 #CUDA_RUN="./bin/mandelbrot_cuda"
 
 # OMPI parameters
-NUM_TASKS=('8' '16' '32' '64')
+NUM_TASKS=('4' '8' '16' '32' '64')
 MPI_RUN="mpirun -np"
 MPI_BIN="./bin/mandelbrot_ompi"
 
