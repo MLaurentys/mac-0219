@@ -231,7 +231,7 @@ int main(int argc, char *argv[]){
     // MASTER TASK
     if (rank == MASTER) {
         allocate_image_buffer();
-        printf("mpi_mm has started with %d tasks.\n", size);
+        //printf("mpi_mm has started with %d tasks.\n", size);
         /* Send each task its portion of the work, some more than others (+1) */
         begin_y = rows;
         end_y = begin_y + rows;
@@ -242,7 +242,7 @@ int main(int argc, char *argv[]){
             MPI_Send  (&begin_y,    1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&end_y,      1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
             MPI_Send  (&image_size, 1, MPI_INT, dest, tag1, MPI_COMM_WORLD);
-            printf ("Sent %d elements to task %d. To start: %d\n", chunksize, dest, begin_y * i_x_max);
+            //printf ("Sent %d elements to task %d. To start: %d\n", chunksize, dest, begin_y * i_x_max);
             begin_y = end_y;
             end_y += rows;
         }
@@ -260,7 +260,7 @@ int main(int argc, char *argv[]){
             MPI_Recv (&image_buffer[start_index], chunksize * 3, MPI_UNSIGNED_CHAR, source, tag2, MPI_COMM_WORLD, &status);
         }
 
-        printf ("Writing to file........ \n");
+        //printf ("Writing to file........ \n");
 
         write_to_file();
 
